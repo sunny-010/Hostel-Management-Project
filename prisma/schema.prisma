@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum ComplaintStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student?
+}
+
+model Student {
+  id            Int      @id @default(autoincrement())
+  studentId     String   @unique
+  name          String
+  email         String   @unique
+  phone         String?
+  department    String?
+  year          Int?
+  createdAt     DateTime @default(now())
+
+  userId        Int      @unique
+  user          User     @relation(fields: [userId], references: [id])
+
+  allocations   RoomAllocation[]
+  fees          Fee[]
+  complaints    Complaint[]
+  leaveRequests LeaveApplication[]
+}
+
+model Hostel {
+  id        Int      @id @default(autoincrement())
+  name      String
+  block     String
+  createdAt DateTime @default(now())
+
+  rooms     Room[]
+}
+
+model Room {
+  id          Int      @id @default(autoincrement())
+  roomNumber  String
+  capacity    Int
+  occupied    Int      @default(0)
+
+  hostelId    Int
+  hostel      Hostel   @relation(fields: [hostelId], references: [id])
+
+  allocations RoomAllocation[]
+
+  @@unique([hostelId, roomNumber])
+}
+
+model RoomAllocation {
+  id          Int      @id @default(autoincrement())
+  allocatedAt DateTime @default(now())
+
+  studentId   Int
+  student     Student  @relation(fields: [studentId], references: [id])
+
+  roomId      Int
+  room        Room     @relation(fields: [roomId], references: [id])
+
+  @@unique([studentId, roomId])
+}
+
+model Fee {
+  id        Int       @id @default(autoincrement())
+  amount    Decimal   @db.Decimal(10, 2)
+  status    FeeStatus @default(PENDING)
+  dueDate   DateTime
+  paidDate  DateTime?
+  createdAt DateTime  @default(now())
+
+  studentId Int
+  student   Student   @relation(fields: [studentId], references: [id])
+}
+
+model Complaint {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String          @db.Text
+  status      ComplaintStatus @default(PENDING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  studentId   Int
+  student     Student        @relation(fields: [studentId], references: [id])
+}
+
+model LeaveApplication {
+  id         Int         @id @default(autoincrement())
+  fromDate   DateTime
+  toDate     DateTime
+  reason     String      @db.Text
+  status     LeaveStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  studentId  Int
+  student    Student    @relation(fields: [studentId], references: [id])
+}
+
+model Notice {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+}
