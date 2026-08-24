@@ -16,7 +16,14 @@ export async function GET() {
   try {
     const hostels = await prisma.hostel.findMany({
       include: {
-        rooms: true,
+        blocks: {
+          include: {
+            rooms: true,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -53,25 +60,44 @@ export async function POST(request: Request) {
     if (!name || !block) {
       return NextResponse.json(
         {
-          message:
-            "Hostel name and block are required",
+          message: "Hostel name and block are required",
         },
         { status: 400 }
       );
     }
 
-    const hostel = await prisma.hostel.create({
-      data: {
-        name,
-        block,
-      },
+    const hostel = await prisma.$transaction(async (tx) => {
+      const newHostel = await tx.hostel.create({
+        data: {
+          name,
+          block,
+        },
+      });
+
+      await tx.block.create({
+        data: {
+          name: block,
+          hostelId: newHostel.id,
+        },
+      });
+
+      return newHostel;
     });
 
     return NextResponse.json(hostel, {
       status: 201,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Create hostel error:", error);
+
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        {
+          message: "This block already exists in this hostel",
+        },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json(
       { message: "Failed to create hostel" },
@@ -95,34 +121,26 @@ export async function PUT(request: Request) {
 
     const hostelId = Number(body.id);
     const name = String(body.name ?? "").trim();
-    const block = String(body.block ?? "").trim();
 
-    if (
-      !Number.isInteger(hostelId) ||
-      hostelId <= 0
-    ) {
+    if (!Number.isInteger(hostelId) || hostelId <= 0) {
       return NextResponse.json(
         { message: "Invalid hostel ID" },
         { status: 400 }
       );
     }
 
-    if (!name || !block) {
+    if (!name) {
       return NextResponse.json(
-        {
-          message:
-            "Hostel name and block are required",
-        },
+        { message: "Hostel name is required" },
         { status: 400 }
       );
     }
 
-    const hostel =
-      await prisma.hostel.findUnique({
-        where: {
-          id: hostelId,
-        },
-      });
+    const hostel = await prisma.hostel.findUnique({
+      where: {
+        id: hostelId,
+      },
+    });
 
     if (!hostel) {
       return NextResponse.json(
@@ -131,19 +149,17 @@ export async function PUT(request: Request) {
       );
     }
 
-    const updatedHostel =
-      await prisma.hostel.update({
-        where: {
-          id: hostelId,
-        },
-        data: {
-          name,
-          block,
-        },
-      });
+    const updatedHostel = await prisma.hostel.update({
+      where: {
+        id: hostelId,
+      },
+      data: {
+        name,
+      },
+    });
 
     return NextResponse.json(updatedHostel);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update hostel error:", error);
 
     return NextResponse.json(
@@ -168,29 +184,29 @@ export async function DELETE(request: Request) {
 
     const hostelId = Number(body.id);
 
-    if (
-      !Number.isInteger(hostelId) ||
-      hostelId <= 0
-    ) {
+    if (!Number.isInteger(hostelId) || hostelId <= 0) {
       return NextResponse.json(
         { message: "Invalid hostel ID" },
         { status: 400 }
       );
     }
 
-    const hostel =
-      await prisma.hostel.findUnique({
-        where: {
-          id: hostelId,
-        },
-        include: {
-          _count: {
-            select: {
-              rooms: true,
+    const hostel = await prisma.hostel.findUnique({
+      where: {
+        id: hostelId,
+      },
+      include: {
+        blocks: {
+          include: {
+            _count: {
+              select: {
+                rooms: true,
+              },
             },
           },
         },
-      });
+      },
+    });
 
     if (!hostel) {
       return NextResponse.json(
@@ -199,7 +215,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (hostel._count.rooms > 0) {
+    const hasRooms = hostel.blocks.some(
+      (block) => block._count.rooms > 0
+    );
+
+    if (hasRooms) {
       return NextResponse.json(
         {
           message:
@@ -209,10 +229,18 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.hostel.delete({
-      where: {
-        id: hostelId,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.block.deleteMany({
+        where: {
+          hostelId: hostelId,
+        },
+      });
+
+      await tx.hostel.delete({
+        where: {
+          id: hostelId,
+        },
+      });
     });
 
     return NextResponse.json({
@@ -225,7 +253,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         {
           message:
-            "This hostel cannot be deleted because it contains related data",
+            "This hostel cannot be deleted because it contains related data.",
         },
         { status: 409 }
       );

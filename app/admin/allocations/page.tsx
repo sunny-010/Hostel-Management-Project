@@ -22,6 +22,20 @@ type Room = {
   };
 };
 
+type Block = {
+  id: number;
+  name: string;
+  hostelId: number;
+  rooms: Room[];
+};
+
+type Hostel = {
+  id: number;
+  name: string;
+  block: string;
+  blocks: Block[];
+};
+
 type Allocation = {
   id: number;
   allocatedAt: string;
@@ -32,7 +46,8 @@ type Allocation = {
 export default function AllocationsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [allocations, setAllocations] = useState<Allocation[]>([]);
+  const [allocations, setAllocations] =
+    useState<Allocation[]>([]);
 
   const [studentId, setStudentId] = useState("");
   const [roomId, setRoomId] = useState("");
@@ -47,8 +62,14 @@ export default function AllocationsPage() {
   const [modifying, setModifying] = useState(false);
   const [message, setMessage] = useState("");
 
+  // --------------------------------------------------
+  // Load Students, Rooms and Allocations
+  // --------------------------------------------------
+
   async function loadData() {
     try {
+      setLoading(true);
+
       const [
         studentsResponse,
         roomsResponse,
@@ -67,32 +88,52 @@ export default function AllocationsPage() {
         throw new Error("Failed to load data");
       }
 
-      const studentsData = await studentsResponse.json();
-      const hostelsData = await roomsResponse.json();
-      const allocationsData = await allocationsResponse.json();
+      const studentsData =
+        await studentsResponse.json();
+
+      const hostelsData: Hostel[] =
+        await roomsResponse.json();
+
+      const allocationsData =
+        await allocationsResponse.json();
 
       setStudents(studentsData);
       setAllocations(allocationsData);
 
+      // --------------------------------------------------
+      // Convert:
+      // Hostel -> Blocks -> Rooms
+      //
+      // into a flat room list for allocation dropdowns.
+      // --------------------------------------------------
+
       const allRooms: Room[] = [];
 
       for (const hostel of hostelsData) {
-        for (const room of hostel.rooms) {
-          allRooms.push({
-            ...room,
-            hostel: {
-              id: hostel.id,
-              name: hostel.name,
-              block: hostel.block,
-            },
-          });
+        for (const block of hostel.blocks ?? []) {
+          for (const room of block.rooms ?? []) {
+            allRooms.push({
+              ...room,
+              hostel: {
+                id: hostel.id,
+                name: hostel.name,
+                block: block.name,
+              },
+            });
+          }
         }
       }
 
       setRooms(allRooms);
     } catch (error) {
-      console.error("Load allocation data error:", error);
-      setMessage("Failed to load allocation data");
+      console.error(
+        "Load allocation data error:",
+        error
+      );
+
+      setMessage(
+        "Failed to load allocation data"
+      );
     } finally {
       setLoading(false);
     }
@@ -102,13 +143,19 @@ export default function AllocationsPage() {
     loadData();
   }, []);
 
+  // --------------------------------------------------
+  // Allocate Room
+  // --------------------------------------------------
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
     if (!studentId || !roomId) {
-      setMessage("Please select a student and a room");
+      setMessage(
+        "Please select a student and a room"
+      );
       return;
     }
 
@@ -134,43 +181,73 @@ export default function AllocationsPage() {
 
       if (!response.ok) {
         setMessage(
-          data.message || "Failed to allocate room"
+          data.message ||
+            "Failed to allocate room"
         );
         return;
       }
 
-      setMessage("Room allocated successfully!");
+      setMessage(
+        "Room allocated successfully!"
+      );
 
       setStudentId("");
       setRoomId("");
 
       await loadData();
     } catch (error) {
-      console.error("Allocation error:", error);
-      setMessage("Something went wrong");
+      console.error(
+        "Allocation error:",
+        error
+      );
+
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  function startModify(allocation: Allocation) {
+  // --------------------------------------------------
+  // Start Modify Allocation
+  // --------------------------------------------------
+
+  function startModify(
+    allocation: Allocation
+  ) {
     setEditingAllocation(allocation);
-    setEditRoomId(String(allocation.room.id));
+    setEditRoomId(
+      String(allocation.room.id)
+    );
     setMessage("");
   }
+
+  // --------------------------------------------------
+  // Cancel Modify
+  // --------------------------------------------------
 
   function cancelModify() {
     setEditingAllocation(null);
     setEditRoomId("");
   }
 
+  // --------------------------------------------------
+  // Modify Allocation
+  // --------------------------------------------------
+
   async function handleModify(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    if (!editingAllocation || !editRoomId) {
-      setMessage("Please select a new room");
+    if (
+      !editingAllocation ||
+      !editRoomId
+    ) {
+      setMessage(
+        "Please select a new room"
+      );
       return;
     }
 
@@ -185,17 +262,21 @@ export default function AllocationsPage() {
     }
 
     const selectedRoom = rooms.find(
-      (room) => room.id === Number(editRoomId)
+      (room) =>
+        room.id === Number(editRoomId)
     );
 
     if (!selectedRoom) {
-      setMessage("Selected room not found");
+      setMessage(
+        "Selected room not found"
+      );
       return;
     }
 
-    const confirmed = window.confirm(
-      `Change ${editingAllocation.student.name}'s room from Room ${editingAllocation.room.roomNumber} to Room ${selectedRoom.roomNumber}?`
-    );
+    const confirmed =
+      window.confirm(
+        `Change ${editingAllocation.student.name}'s room from ${editingAllocation.room.hostel.name} → ${editingAllocation.room.hostel.block} → Room ${editingAllocation.room.roomNumber} to ${selectedRoom.hostel.name} → ${selectedRoom.hostel.block} → Room ${selectedRoom.roomNumber}?`
+      );
 
     if (!confirmed) {
       return;
@@ -210,16 +291,19 @@ export default function AllocationsPage() {
         {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
           body: JSON.stringify({
-            allocationId: editingAllocation.id,
+            allocationId:
+              editingAllocation.id,
             roomId: editRoomId,
           }),
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         setMessage(
@@ -230,7 +314,7 @@ export default function AllocationsPage() {
       }
 
       setMessage(
-        `Room changed successfully to Room ${selectedRoom.roomNumber}!`
+        `Room changed successfully to ${selectedRoom.hostel.name} → ${selectedRoom.hostel.block} → Room ${selectedRoom.roomNumber}!`
       );
 
       setEditingAllocation(null);
@@ -244,26 +328,21 @@ export default function AllocationsPage() {
       );
 
       setMessage(
-        "Something went wrong while modifying the room"
+        "Something went wrong"
       );
     } finally {
       setModifying(false);
     }
   }
 
-  const availableRooms = rooms.filter(
-    (room) => room.occupied < room.capacity
-  );
-
-  const modificationRooms = rooms.filter(
-    (room) =>
-      room.occupied < room.capacity ||
-      room.id === editingAllocation?.room.id
-  );
+  // --------------------------------------------------
+  // Page
+  // --------------------------------------------------
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
+
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
@@ -295,8 +374,10 @@ export default function AllocationsPage() {
       </header>
 
       {/* Main */}
+
       <section className="mx-auto max-w-7xl px-6 py-10">
         {/* Heading */}
+
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium text-blue-400">
             ADMINISTRATION
@@ -307,66 +388,53 @@ export default function AllocationsPage() {
           </h2>
 
           <p className="mt-2 text-slate-400">
-            Assign students to available hostel
-            rooms and modify existing allocations.
+            Allocate rooms to students and
+            modify existing allocations.
           </p>
         </div>
 
         {/* Message */}
+
         {message && (
           <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 px-5 py-4 text-sm text-blue-300">
             {message}
           </div>
         )}
 
-        {/* Allocation Form */}
-        <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        {/* Allocate Room */}
+
+        <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <h3 className="mb-6 text-xl font-bold">
             Allocate Room
           </h3>
 
-          {loading ? (
-            <p className="text-slate-400">
-              Loading...
-            </p>
-          ) : students.length === 0 ? (
-            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-5 text-sm text-yellow-300">
-              No students are registered yet.
-              Please add a student first.
-            </div>
-          ) : rooms.length === 0 ? (
-            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-5 text-sm text-yellow-300">
-              No rooms are available. Please
-              create a room first.
-            </div>
-          ) : availableRooms.length === 0 ? (
-            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-5 text-sm text-yellow-300">
-              All rooms are currently full.
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="grid gap-5 md:grid-cols-3"
-            >
-              {/* Student */}
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Student *
-                </label>
+          <form
+            onSubmit={handleSubmit}
+            className="grid gap-5 sm:grid-cols-3"
+          >
+            {/* Student */}
 
-                <select
-                  required
-                  value={studentId}
-                  onChange={(e) =>
-                    setStudentId(e.target.value)
-                  }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
-                >
-                  <option value="">
-                    Select student
-                  </option>
+            <div>
+              <label className="mb-2 block text-sm text-slate-300">
+                Student *
+              </label>
 
-                  {students.map((student) => (
+              <select
+                required
+                value={studentId}
+                onChange={(e) =>
+                  setStudentId(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+              >
+                <option value="">
+                  Select student
+                </option>
+
+                {students.map(
+                  (student) => (
                     <option
                       key={student.id}
                       value={student.id}
@@ -374,109 +442,122 @@ export default function AllocationsPage() {
                       {student.name} (
                       {student.studentId})
                     </option>
-                  ))}
-                </select>
-              </div>
+                  )
+                )}
+              </select>
+            </div>
 
-              {/* Room */}
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Available Room *
-                </label>
+            {/* Room */}
 
-                <select
-                  required
-                  value={roomId}
-                  onChange={(e) =>
-                    setRoomId(e.target.value)
-                  }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
-                >
-                  <option value="">
-                    Select room
-                  </option>
+            <div>
+              <label className="mb-2 block text-sm text-slate-300">
+                Room *
+              </label>
 
-                  {availableRooms.map((room) => (
+              <select
+                required
+                value={roomId}
+                onChange={(e) =>
+                  setRoomId(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+              >
+                <option value="">
+                  Select room
+                </option>
+
+                {rooms
+                  .filter(
+                    (room) =>
+                      room.occupied <
+                      room.capacity
+                  )
+                  .map((room) => (
                     <option
                       key={room.id}
                       value={room.id}
                     >
-                      {room.hostel.name} - Room{" "}
+                      {room.hostel.name} →{" "}
+                      {room.hostel.block} → Room{" "}
                       {room.roomNumber} (
-                      {room.capacity -
-                        room.occupied}{" "}
-                      beds available)
+                      {
+                        room.capacity -
+                          room.occupied
+                      }{" "}
+                      available)
                     </option>
                   ))}
-                </select>
-              </div>
-
-              {/* Button */}
-              <div className="flex items-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {saving
-                    ? "Allocating..."
-                    : "Allocate Room"}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* Modify Room Panel */}
-        {editingAllocation && (
-          <div className="mb-10 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-6">
-            <div className="mb-6">
-              <p className="mb-1 text-sm font-medium text-blue-400">
-                MODIFY ALLOCATION
-              </p>
-
-              <h3 className="text-xl font-bold">
-                Change Room
-              </h3>
-
-              <p className="mt-2 text-sm text-slate-400">
-                Changing room for{" "}
-                <span className="font-semibold text-white">
-                  {editingAllocation.student.name}
-                </span>
-              </p>
+              </select>
             </div>
 
-            <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs text-slate-500">
-                  Current Room
+            {/* Submit */}
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving
+                  ? "Allocating..."
+                  : "Allocate Room"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Modify Allocation */}
+
+        {editingAllocation && (
+          <div className="mb-8 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold">
+                  Modify Room Allocation
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  Student:{" "}
+                  {
+                    editingAllocation
+                      .student.name
+                  }
                 </p>
 
-                <p className="mt-1 font-semibold text-blue-400">
-                  {editingAllocation.room.hostel.name}
-                  {" — "}
-                  Room{" "}
-                  {editingAllocation.room.roomNumber}
+                <p className="mt-1 text-sm text-slate-400">
+                  Current room:{" "}
+                  {
+                    editingAllocation
+                      .room.hostel.name
+                  }{" "}
+                  →{" "}
+                  {
+                    editingAllocation
+                      .room.hostel.block
+                  }{" "}
+                  → Room{" "}
+                  {
+                    editingAllocation
+                      .room.roomNumber
+                  }
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs text-slate-500">
-                  Student ID
-                </p>
-
-                <p className="mt-1 font-semibold">
-                  {editingAllocation.student.studentId}
-                </p>
-              </div>
+              <button
+                onClick={cancelModify}
+                className="rounded-lg border border-white/10 px-3 py-2 text-sm transition hover:bg-white/10"
+              >
+                Cancel
+              </button>
             </div>
 
             <form
               onSubmit={handleModify}
-              className="grid gap-5 md:grid-cols-3"
+              className="grid gap-5 sm:grid-cols-2"
             >
-              <div className="md:col-span-2">
+              <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   New Room *
                 </label>
@@ -485,7 +566,9 @@ export default function AllocationsPage() {
                   required
                   value={editRoomId}
                   onChange={(e) =>
-                    setEditRoomId(e.target.value)
+                    setEditRoomId(
+                      e.target.value
+                    )
                   }
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
                 >
@@ -493,65 +576,67 @@ export default function AllocationsPage() {
                     Select new room
                   </option>
 
-                  {modificationRooms.map((room) => (
-                    <option
-                      key={room.id}
-                      value={room.id}
-                    >
-                      {room.hostel.name} - Room{" "}
-                      {room.roomNumber} (
-                      {room.capacity -
-                        room.occupied}{" "}
-                      beds available)
-                    </option>
-                  ))}
+                  {rooms
+                    .filter(
+                      (room) =>
+                        room.occupied <
+                          room.capacity ||
+                        room.id ===
+                          editingAllocation.room
+                            .id
+                    )
+                    .map((room) => (
+                      <option
+                        key={room.id}
+                        value={room.id}
+                      >
+                        {room.hostel.name} →{" "}
+                        {room.hostel.block} → Room{" "}
+                        {room.roomNumber} (
+                        {room.capacity -
+                          room.occupied}{" "}
+                        available)
+                      </option>
+                    ))}
                 </select>
               </div>
 
-              <div className="flex items-end gap-3">
+              <div className="flex items-end">
                 <button
                   type="submit"
                   disabled={modifying}
-                  className="flex-1 rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {modifying
                     ? "Changing..."
                     : "Change Room"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={cancelModify}
-                  disabled={modifying}
-                  className="rounded-xl border border-white/10 px-5 py-3 font-semibold text-slate-300 transition hover:bg-white/10 disabled:opacity-50"
-                >
-                  Cancel
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {/* Current Allocations */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-          <div className="border-b border-white/10 px-6 py-5">
-            <h3 className="font-bold">
-              Current Allocations
+        {/* Allocation List */}
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
+          <div className="border-b border-white/10 p-6">
+            <h3 className="text-xl font-bold">
+              Current Room Allocations
             </h3>
 
             <p className="mt-1 text-sm text-slate-400">
-              {allocations.length} active allocation
-              {allocations.length !== 1 ? "s" : ""}
+              Students currently assigned to
+              hostel rooms.
             </p>
           </div>
 
           {loading ? (
-            <div className="px-6 py-12 text-center text-slate-400">
+            <div className="p-10 text-center text-slate-400">
               Loading allocations...
             </div>
           ) : allocations.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <div className="mb-4 text-5xl">
+            <div className="p-10 text-center">
+              <div className="mb-3 text-4xl">
                 🛏️
               </div>
 
@@ -560,8 +645,8 @@ export default function AllocationsPage() {
               </h4>
 
               <p className="mt-2 text-sm text-slate-400">
-                Allocate a student to a room using
-                the form above.
+                Allocate a room to a student
+                using the form above.
               </p>
             </div>
           ) : (
@@ -569,28 +654,32 @@ export default function AllocationsPage() {
               <table className="w-full text-left">
                 <thead className="border-b border-white/10 bg-white/[0.02]">
                   <tr>
-                    <th className="px-6 py-4 text-sm font-semibold">
+                    <th className="px-6 py-4 text-sm">
                       Student
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold">
+                    <th className="px-6 py-4 text-sm">
                       Student ID
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold">
+                    <th className="px-6 py-4 text-sm">
                       Hostel
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold">
+                    <th className="px-6 py-4 text-sm">
+                      Block
+                    </th>
+
+                    <th className="px-6 py-4 text-sm">
                       Room
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold">
-                      Allocated On
+                    <th className="px-6 py-4 text-sm">
+                      Allocated
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold">
-                      Action
+                    <th className="px-6 py-4 text-sm">
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -603,44 +692,47 @@ export default function AllocationsPage() {
                         className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
                       >
                         <td className="px-6 py-4">
-                          <p className="font-medium">
-                            {
-                              allocation.student
-                                .name
-                            }
-                          </p>
+                          <div>
+                            <p className="font-medium">
+                              {
+                                allocation
+                                  .student
+                                  .name
+                              }
+                            </p>
 
-                          <p className="text-sm text-slate-500">
-                            {
-                              allocation.student
-                                .email
-                            }
-                          </p>
+                            <p className="text-xs text-slate-500">
+                              {
+                                allocation
+                                  .student
+                                  .email
+                              }
+                            </p>
+                          </div>
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-slate-300">
+                        <td className="px-6 py-4 text-slate-300">
                           {
                             allocation.student
                               .studentId
                           }
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-slate-300">
+                        <td className="px-6 py-4 text-slate-300">
                           {
-                            allocation.room.hostel
-                              .name
+                            allocation.room
+                              .hostel.name
                           }
-
-                          <p className="text-xs text-slate-500">
-                            Block{" "}
-                            {
-                              allocation.room.hostel
-                                .block
-                            }
-                          </p>
                         </td>
 
-                        <td className="px-6 py-4 text-sm font-semibold text-blue-400">
+                        <td className="px-6 py-4 text-slate-300">
+                          {
+                            allocation.room
+                              .hostel.block
+                          }
+                        </td>
+
+                        <td className="px-6 py-4 font-medium">
                           Room{" "}
                           {
                             allocation.room
@@ -661,9 +753,9 @@ export default function AllocationsPage() {
                                 allocation
                               )
                             }
-                            className="rounded-lg border border-blue-500/30 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-500/10"
+                            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
                           >
-                            Modify
+                            ✏️ Modify
                           </button>
                         </td>
                       </tr>

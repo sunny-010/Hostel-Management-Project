@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -9,35 +8,71 @@ type Room = {
   roomNumber: string;
   capacity: number;
   occupied: number;
+  hostelId: number;
+  blockId: number;
+};
+
+type Block = {
+  id: number;
+  name: string;
+  hostelId: number;
+  rooms: Room[];
 };
 
 type Hostel = {
   id: number;
   name: string;
   block: string;
-  rooms: Room[];
+  blocks: Block[];
 };
 
 export default function RoomsPage() {
   const [hostels, setHostels] = useState<Hostel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const [showHostelForm, setShowHostelForm] =
     useState(false);
 
+  const [showBlockForm, setShowBlockForm] =
+    useState(false);
+
   const [showRoomForm, setShowRoomForm] =
     useState(false);
+
+  // --------------------------------------------------
+  // Hostel Form
+  // --------------------------------------------------
 
   const [hostelForm, setHostelForm] = useState({
     name: "",
     block: "",
   });
 
+  // --------------------------------------------------
+  // Block Form
+  // --------------------------------------------------
+
+  const [blockForm, setBlockForm] = useState({
+    hostelId: "",
+    name: "",
+  });
+
+  // --------------------------------------------------
+  // Room Form
+  // --------------------------------------------------
+
   const [roomForm, setRoomForm] = useState({
     hostelId: "",
+    blockId: "",
     roomNumber: "",
     capacity: "",
   });
+
+  // --------------------------------------------------
+  // Editing
+  // --------------------------------------------------
 
   const [editingHostel, setEditingHostel] =
     useState<Hostel | null>(null);
@@ -48,7 +83,6 @@ export default function RoomsPage() {
   const [editHostelForm, setEditHostelForm] =
     useState({
       name: "",
-      block: "",
     });
 
   const [editRoomForm, setEditRoomForm] =
@@ -57,15 +91,14 @@ export default function RoomsPage() {
       capacity: "",
     });
 
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-
-  // -----------------------------
+  // --------------------------------------------------
   // Load Hostels
-  // -----------------------------
+  // --------------------------------------------------
 
   async function loadHostels() {
     try {
+      setLoading(true);
+
       const response = await fetch(
         "/api/admin/hostels"
       );
@@ -85,7 +118,9 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Failed to load hostels");
+      setMessage(
+        "Failed to load hostels"
+      );
     } finally {
       setLoading(false);
     }
@@ -95,9 +130,60 @@ export default function RoomsPage() {
     loadHostels();
   }, []);
 
-  // -----------------------------
-  // Create Hostel
-  // -----------------------------
+  // --------------------------------------------------
+  // Helpers
+  // --------------------------------------------------
+
+  function closeAllForms() {
+    setShowHostelForm(false);
+    setShowBlockForm(false);
+    setShowRoomForm(false);
+    setEditingHostel(null);
+    setEditingRoom(null);
+    setMessage("");
+  }
+
+  function getBlockCount(hostel: Hostel) {
+    return hostel.blocks.length;
+  }
+
+  function getRoomCount(hostel: Hostel) {
+    return hostel.blocks.reduce(
+      (total, block) =>
+        total + block.rooms.length,
+      0
+    );
+  }
+
+  function getTotalCapacity(hostel: Hostel) {
+    return hostel.blocks.reduce(
+      (total, block) =>
+        total +
+        block.rooms.reduce(
+          (blockTotal, room) =>
+            blockTotal + room.capacity,
+          0
+        ),
+      0
+    );
+  }
+
+  function getOccupied(hostel: Hostel) {
+    return hostel.blocks.reduce(
+      (total, block) =>
+        total +
+        block.rooms.reduce(
+          (blockTotal, room) =>
+            blockTotal + room.occupied,
+          0
+        ),
+      0
+    );
+  }
+
+  // --------------------------------------------------
+  // Add Hostel
+  // --------------------------------------------------
 
   async function handleHostelSubmit(
     event: FormEvent<HTMLFormElement>
@@ -113,8 +199,7 @@ export default function RoomsPage() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(hostelForm),
         }
@@ -148,15 +233,82 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
-  // Create Room
-  // -----------------------------
+  // --------------------------------------------------
+  // Add Block
+  // --------------------------------------------------
+
+  async function handleBlockSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setSaving(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/blocks",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            hostelId: Number(
+              blockForm.hostelId
+            ),
+            name: blockForm.name,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          data.message ||
+            "Failed to create block"
+        );
+        return;
+      }
+
+      setMessage(
+        "Block created successfully!"
+      );
+
+      setBlockForm({
+        hostelId: "",
+        name: "",
+      });
+
+      setShowBlockForm(false);
+
+      await loadHostels();
+    } catch (error) {
+      console.error(
+        "Create block error:",
+        error
+      );
+
+      setMessage(
+        "Something went wrong"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // --------------------------------------------------
+  // Add Room
+  // --------------------------------------------------
 
   async function handleRoomSubmit(
     event: FormEvent<HTMLFormElement>
@@ -172,10 +324,21 @@ export default function RoomsPage() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(roomForm),
+          body: JSON.stringify({
+            hostelId: Number(
+              roomForm.hostelId
+            ),
+            blockId: Number(
+              roomForm.blockId
+            ),
+            roomNumber:
+              roomForm.roomNumber,
+            capacity: Number(
+              roomForm.capacity
+            ),
+          }),
         }
       );
 
@@ -195,6 +358,7 @@ export default function RoomsPage() {
 
       setRoomForm({
         hostelId: "",
+        blockId: "",
         roomNumber: "",
         capacity: "",
       });
@@ -208,15 +372,17 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
-  // Start Edit Hostel
-  // -----------------------------
+  // --------------------------------------------------
+  // Edit Hostel
+  // --------------------------------------------------
 
   function startEditHostel(
     hostel: Hostel
@@ -225,16 +391,14 @@ export default function RoomsPage() {
 
     setEditHostelForm({
       name: hostel.name,
-      block: hostel.block,
     });
 
+    setShowHostelForm(false);
+    setShowBlockForm(false);
+    setShowRoomForm(false);
     setEditingRoom(null);
     setMessage("");
   }
-
-  // -----------------------------
-  // Update Hostel
-  // -----------------------------
 
   async function handleUpdateHostel(
     event: FormEvent<HTMLFormElement>
@@ -252,13 +416,16 @@ export default function RoomsPage() {
         {
           method: "PUT",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             id: editingHostel.id,
             name: editHostelForm.name,
-            block: editHostelForm.block,
+            block:
+              editingHostel.blocks[0]
+                ?.name ||
+              editingHostel.block ||
+              "",
           }),
         }
       );
@@ -286,29 +453,45 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
+  // --------------------------------------------------
   // Delete Hostel
-  // -----------------------------
+  // --------------------------------------------------
 
   async function handleDeleteHostel(
     hostel: Hostel
   ) {
-    if (hostel.rooms.length > 0) {
+    const roomCount =
+      getRoomCount(hostel);
+
+    const blockCount =
+      getBlockCount(hostel);
+
+    if (roomCount > 0) {
       setMessage(
-        `Cannot delete ${hostel.name}. Delete all rooms from this hostel first.`
+        `Cannot delete ${hostel.name}. Delete all rooms first.`
       );
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${hostel.name}"?`
-    );
+    if (blockCount > 0) {
+      setMessage(
+        `Cannot delete ${hostel.name}. Delete all blocks first.`
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete "${hostel.name}"?`
+      );
 
     if (!confirmed) return;
 
@@ -330,7 +513,8 @@ export default function RoomsPage() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         setMessage(
@@ -351,31 +535,105 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
-  // Start Edit Room
-  // -----------------------------
+  // --------------------------------------------------
+  // Delete Block
+  // --------------------------------------------------
 
-  function startEditRoom(room: Room) {
+  async function handleDeleteBlock(
+    block: Block
+  ) {
+    if (block.rooms.length > 0) {
+      setMessage(
+        `Cannot delete ${block.name}. Delete all rooms from this block first.`
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete "${block.name}"?`
+      );
+
+    if (!confirmed) return;
+
+    setSaving(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/blocks",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            id: block.id,
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          data.message ||
+            "Failed to delete block"
+        );
+        return;
+      }
+
+      setMessage(
+        "Block deleted successfully!"
+      );
+
+      await loadHostels();
+    } catch (error) {
+      console.error(
+        "Delete block error:",
+        error
+      );
+
+      setMessage(
+        "Something went wrong"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // --------------------------------------------------
+  // Edit Room
+  // --------------------------------------------------
+
+  function startEditRoom(
+    room: Room
+  ) {
     setEditingRoom(room);
 
     setEditRoomForm({
-      roomNumber: room.roomNumber,
-      capacity: String(room.capacity),
+      roomNumber:
+        room.roomNumber,
+      capacity:
+        String(room.capacity),
     });
 
     setEditingHostel(null);
+    setShowHostelForm(false);
+    setShowBlockForm(false);
+    setShowRoomForm(false);
     setMessage("");
   }
-
-  // -----------------------------
-  // Update Room
-  // -----------------------------
 
   async function handleUpdateRoom(
     event: FormEvent<HTMLFormElement>
@@ -388,7 +646,10 @@ export default function RoomsPage() {
       editRoomForm.capacity
     );
 
-    if (capacity < editingRoom.occupied) {
+    if (
+      capacity <
+      editingRoom.occupied
+    ) {
       setMessage(
         `Capacity cannot be less than current occupancy (${editingRoom.occupied}).`
       );
@@ -415,7 +676,8 @@ export default function RoomsPage() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         setMessage(
@@ -438,15 +700,17 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
+  // --------------------------------------------------
   // Delete Room
-  // -----------------------------
+  // --------------------------------------------------
 
   async function handleDeleteRoom(
     room: Room
@@ -458,9 +722,10 @@ export default function RoomsPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete Room ${room.roomNumber}?`
-    );
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete Room ${room.roomNumber}?`
+      );
 
     if (!confirmed) return;
 
@@ -475,7 +740,8 @@ export default function RoomsPage() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         setMessage(
@@ -496,15 +762,17 @@ export default function RoomsPage() {
         error
       );
 
-      setMessage("Something went wrong");
+      setMessage(
+        "Something went wrong"
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  // -----------------------------
+  // --------------------------------------------------
   // Page
-  // -----------------------------
+  // --------------------------------------------------
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -552,14 +820,16 @@ export default function RoomsPage() {
             </p>
 
             <h2 className="text-3xl font-bold">
-              Hostels & Rooms
+              Hostels, Blocks & Rooms
             </h2>
 
             <p className="mt-2 text-slate-400">
-              Manage hostels, rooms and
+              Manage hostels, blocks, rooms and
               available capacity.
             </p>
           </div>
+
+          {/* Buttons */}
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -567,6 +837,7 @@ export default function RoomsPage() {
                 setShowHostelForm(
                   !showHostelForm
                 );
+                setShowBlockForm(false);
                 setShowRoomForm(false);
                 setEditingHostel(null);
                 setEditingRoom(null);
@@ -581,10 +852,29 @@ export default function RoomsPage() {
 
             <button
               onClick={() => {
+                setShowBlockForm(
+                  !showBlockForm
+                );
+                setShowHostelForm(false);
+                setShowRoomForm(false);
+                setEditingHostel(null);
+                setEditingRoom(null);
+                setMessage("");
+              }}
+              className="rounded-xl border border-purple-500/40 bg-purple-500/10 px-5 py-3 font-semibold text-purple-400 transition hover:bg-purple-500/20"
+            >
+              {showBlockForm
+                ? "Cancel"
+                : "+ Add Block"}
+            </button>
+
+            <button
+              onClick={() => {
                 setShowRoomForm(
                   !showRoomForm
                 );
                 setShowHostelForm(false);
+                setShowBlockForm(false);
                 setEditingHostel(null);
                 setEditingRoom(null);
                 setMessage("");
@@ -606,7 +896,9 @@ export default function RoomsPage() {
           </div>
         )}
 
-        {/* Add Hostel */}
+        {/* ==================================================
+            ADD HOSTEL
+        ================================================== */}
 
         {showHostelForm && (
           <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
@@ -639,7 +931,7 @@ export default function RoomsPage() {
 
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
-                  Block *
+                  First Block Name *
                 </label>
 
                 <input
@@ -668,10 +960,97 @@ export default function RoomsPage() {
                 </button>
               </div>
             </form>
+
+            <p className="mt-4 text-xs text-slate-500">
+              The first block will automatically be
+              created with the hostel.
+            </p>
           </div>
         )}
 
-        {/* Add Room */}
+        {/* ==================================================
+            ADD BLOCK
+        ================================================== */}
+
+        {showBlockForm && (
+          <div className="mb-8 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6">
+            <h3 className="mb-6 text-xl font-bold">
+              Add New Block
+            </h3>
+
+            <form
+              onSubmit={handleBlockSubmit}
+              className="grid gap-5 sm:grid-cols-3"
+            >
+              <div>
+                <label className="mb-2 block text-sm text-slate-300">
+                  Hostel *
+                </label>
+
+                <select
+                  required
+                  value={blockForm.hostelId}
+                  onChange={(e) =>
+                    setBlockForm({
+                      ...blockForm,
+                      hostelId:
+                        e.target.value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-purple-500"
+                >
+                  <option value="">
+                    Select hostel
+                  </option>
+
+                  {hostels.map((hostel) => (
+                    <option
+                      key={hostel.id}
+                      value={hostel.id}
+                    >
+                      {hostel.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm text-slate-300">
+                  Block Name *
+                </label>
+
+                <input
+                  required
+                  value={blockForm.name}
+                  onChange={(e) =>
+                    setBlockForm({
+                      ...blockForm,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Block B"
+                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full rounded-xl bg-purple-600 px-5 py-3 font-semibold hover:bg-purple-500 disabled:opacity-50"
+                >
+                  {saving
+                    ? "Creating..."
+                    : "Create Block"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ==================================================
+            ADD ROOM
+        ================================================== */}
 
         {showRoomForm && (
           <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
@@ -681,8 +1060,10 @@ export default function RoomsPage() {
 
             <form
               onSubmit={handleRoomSubmit}
-              className="grid gap-5 sm:grid-cols-4"
+              className="grid gap-5 sm:grid-cols-5"
             >
+              {/* Hostel */}
+
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   Hostel *
@@ -691,13 +1072,14 @@ export default function RoomsPage() {
                 <select
                   required
                   value={roomForm.hostelId}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setRoomForm({
                       ...roomForm,
                       hostelId:
                         e.target.value,
-                    })
-                  }
+                      blockId: "",
+                    });
+                  }}
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
                 >
                   <option value="">
@@ -709,12 +1091,62 @@ export default function RoomsPage() {
                       key={hostel.id}
                       value={hostel.id}
                     >
-                      {hostel.name} -{" "}
-                      {hostel.block}
+                      {hostel.name}
                     </option>
                   ))}
                 </select>
               </div>
+
+              {/* Block */}
+
+              <div>
+                <label className="mb-2 block text-sm text-slate-300">
+                  Block *
+                </label>
+
+                <select
+                  required
+                  value={roomForm.blockId}
+                  disabled={
+                    !roomForm.hostelId
+                  }
+                  onChange={(e) =>
+                    setRoomForm({
+                      ...roomForm,
+                      blockId:
+                        e.target.value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">
+                    {roomForm.hostelId
+                      ? "Select block"
+                      : "Select hostel first"}
+                  </option>
+
+                  {hostels
+                    .find(
+                      (hostel) =>
+                        String(
+                          hostel.id
+                        ) ===
+                        roomForm.hostelId
+                    )
+                    ?.blocks.map(
+                      (block) => (
+                        <option
+                          key={block.id}
+                          value={block.id}
+                        >
+                          {block.name}
+                        </option>
+                      )
+                    )}
+                </select>
+              </div>
+
+              {/* Room Number */}
 
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
@@ -723,7 +1155,9 @@ export default function RoomsPage() {
 
                 <input
                   required
-                  value={roomForm.roomNumber}
+                  value={
+                    roomForm.roomNumber
+                  }
                   onChange={(e) =>
                     setRoomForm({
                       ...roomForm,
@@ -736,6 +1170,8 @@ export default function RoomsPage() {
                 />
               </div>
 
+              {/* Capacity */}
+
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   Capacity *
@@ -746,7 +1182,9 @@ export default function RoomsPage() {
                   type="number"
                   min="1"
                   max="20"
-                  value={roomForm.capacity}
+                  value={
+                    roomForm.capacity
+                  }
                   onChange={(e) =>
                     setRoomForm({
                       ...roomForm,
@@ -758,6 +1196,8 @@ export default function RoomsPage() {
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
+
+              {/* Submit */}
 
               <div className="flex items-end">
                 <button
@@ -774,7 +1214,9 @@ export default function RoomsPage() {
           </div>
         )}
 
-        {/* Edit Hostel */}
+        {/* ==================================================
+            EDIT HOSTEL
+        ================================================== */}
 
         {editingHostel && (
           <div className="mb-8 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-6">
@@ -785,7 +1227,7 @@ export default function RoomsPage() {
                 </h3>
 
                 <p className="mt-1 text-sm text-slate-400">
-                  Update hostel name and block.
+                  Update hostel name.
                 </p>
               </div>
 
@@ -801,7 +1243,7 @@ export default function RoomsPage() {
 
             <form
               onSubmit={handleUpdateHostel}
-              className="grid gap-5 sm:grid-cols-3"
+              className="grid gap-5 sm:grid-cols-2"
             >
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
@@ -810,29 +1252,12 @@ export default function RoomsPage() {
 
                 <input
                   required
-                  value={editHostelForm.name}
-                  onChange={(e) =>
-                    setEditHostelForm({
-                      ...editHostelForm,
-                      name: e.target.value,
-                    })
+                  value={
+                    editHostelForm.name
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-slate-300">
-                  Block *
-                </label>
-
-                <input
-                  required
-                  value={editHostelForm.block}
                   onChange={(e) =>
                     setEditHostelForm({
-                      ...editHostelForm,
-                      block: e.target.value,
+                      name: e.target.value,
                     })
                   }
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
@@ -854,7 +1279,9 @@ export default function RoomsPage() {
           </div>
         )}
 
-        {/* Edit Room */}
+        {/* ==================================================
+            EDIT ROOM
+        ================================================== */}
 
         {editingRoom && (
           <div className="mb-8 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-6">
@@ -891,7 +1318,9 @@ export default function RoomsPage() {
 
                 <input
                   required
-                  value={editRoomForm.roomNumber}
+                  value={
+                    editRoomForm.roomNumber
+                  }
                   onChange={(e) =>
                     setEditRoomForm({
                       ...editRoomForm,
@@ -911,9 +1340,13 @@ export default function RoomsPage() {
                 <input
                   required
                   type="number"
-                  min={editingRoom.occupied}
+                  min={
+                    editingRoom.occupied
+                  }
                   max="20"
-                  value={editRoomForm.capacity}
+                  value={
+                    editRoomForm.capacity
+                  }
                   onChange={(e) =>
                     setEditRoomForm({
                       ...editRoomForm,
@@ -926,7 +1359,10 @@ export default function RoomsPage() {
 
                 <p className="mt-2 text-xs text-slate-500">
                   Capacity cannot be less than{" "}
-                  {editingRoom.occupied}.
+                  {
+                    editingRoom.occupied
+                  }
+                  .
                 </p>
               </div>
 
@@ -945,7 +1381,9 @@ export default function RoomsPage() {
           </div>
         )}
 
-        {/* Hostel List */}
+        {/* ==================================================
+            HOSTEL LIST
+        ================================================== */}
 
         {loading ? (
           <div className="py-12 text-center text-slate-400">
@@ -969,22 +1407,21 @@ export default function RoomsPage() {
         ) : (
           <div className="space-y-6">
             {hostels.map((hostel) => {
+              const roomCount =
+                getRoomCount(hostel);
+
+              const blockCount =
+                getBlockCount(hostel);
+
               const totalCapacity =
-                hostel.rooms.reduce(
-                  (total, room) =>
-                    total + room.capacity,
-                  0
-                );
+                getTotalCapacity(hostel);
 
               const occupied =
-                hostel.rooms.reduce(
-                  (total, room) =>
-                    total + room.occupied,
-                  0
-                );
+                getOccupied(hostel);
 
               const available =
-                totalCapacity - occupied;
+                totalCapacity -
+                occupied;
 
               return (
                 <div
@@ -994,25 +1431,31 @@ export default function RoomsPage() {
                   {/* Hostel Header */}
 
                   <div className="flex flex-col justify-between gap-4 border-b border-white/10 p-6 sm:flex-row sm:items-center">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-xl">
-                          🏢
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-xl">
+                        🏢
+                      </div>
 
-                        <div>
-                          <h3 className="text-xl font-bold">
-                            {hostel.name}
-                          </h3>
+                      <div>
+                        <h3 className="text-xl font-bold">
+                          {hostel.name}
+                        </h3>
 
-                          <p className="text-sm text-slate-400">
-                            {hostel.block}
-                          </p>
-                        </div>
+                        <p className="text-sm text-slate-400">
+                          {blockCount}{" "}
+                          {blockCount ===
+                          1
+                            ? "Block"
+                            : "Blocks"}{" "}
+                          •{" "}
+                          {roomCount}{" "}
+                          {roomCount ===
+                          1
+                            ? "Room"
+                            : "Rooms"}
+                        </p>
                       </div>
                     </div>
-
-                    {/* Hostel Actions */}
 
                     <div className="flex flex-wrap items-center gap-2">
                       <button
@@ -1034,14 +1477,19 @@ export default function RoomsPage() {
                         }
                         disabled={
                           saving ||
-                          hostel.rooms
-                            .length > 0
+                          roomCount >
+                            0 ||
+                          blockCount >
+                            0
                         }
                         className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
                         title={
-                          hostel.rooms
-                            .length > 0
+                          roomCount >
+                          0
                             ? "Delete all rooms first"
+                            : blockCount >
+                              0
+                            ? "Delete all blocks first"
                             : "Delete hostel"
                         }
                       >
@@ -1056,11 +1504,21 @@ export default function RoomsPage() {
                     <div className="flex flex-wrap gap-8 text-sm">
                       <div>
                         <p className="text-slate-500">
+                          Blocks
+                        </p>
+
+                        <p className="mt-1 font-bold">
+                          {blockCount}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-slate-500">
                           Rooms
                         </p>
 
                         <p className="mt-1 font-bold">
-                          {hostel.rooms.length}
+                          {roomCount}
                         </p>
                       </div>
 
@@ -1086,120 +1544,197 @@ export default function RoomsPage() {
                     </div>
                   </div>
 
-                  {/* Room List */}
+                  {/* Blocks */}
 
-                  {hostel.rooms.length === 0 ? (
-                    <div className="p-6 text-sm text-slate-400">
-                      No rooms have been
-                      added to this hostel
-                      yet.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead className="border-b border-white/10">
-                          <tr>
-                            <th className="px-6 py-4 text-sm">
-                              Room
-                            </th>
+                  <div className="divide-y divide-white/10">
+                    {hostel.blocks.map(
+                      (block) => (
+                        <div
+                          key={block.id}
+                          className="p-6"
+                        >
+                          {/* Block Header */}
 
-                            <th className="px-6 py-4 text-sm">
-                              Capacity
-                            </th>
+                          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10">
+                                🧱
+                              </div>
 
-                            <th className="px-6 py-4 text-sm">
-                              Occupied
-                            </th>
-
-                            <th className="px-6 py-4 text-sm">
-                              Available
-                            </th>
-
-                            <th className="px-6 py-4 text-sm">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {hostel.rooms.map(
-                            (room) => (
-                              <tr
-                                key={room.id}
-                                className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
-                              >
-                                <td className="px-6 py-4 font-medium">
-                                  Room{" "}
+                              <div>
+                                <h4 className="font-semibold">
                                   {
-                                    room.roomNumber
+                                    block.name
                                   }
-                                </td>
+                                </h4>
 
-                                <td className="px-6 py-4 text-slate-300">
+                                <p className="text-xs text-slate-500">
                                   {
-                                    room.capacity
-                                  }
-                                </td>
+                                    block
+                                      .rooms
+                                      .length
+                                  }{" "}
+                                  {block
+                                    .rooms
+                                    .length ===
+                                  1
+                                    ? "room"
+                                    : "rooms"}
+                                </p>
+                              </div>
+                            </div>
 
-                                <td className="px-6 py-4 text-slate-300">
-                                  {
-                                    room.occupied
-                                  }
-                                </td>
+                            {/* Block Delete */}
 
-                                <td className="px-6 py-4">
-                                  <span className="font-semibold text-green-400">
-                                    {Math.max(
-                                      room.capacity -
-                                        room.occupied,
-                                      0
-                                    )}
-                                  </span>
-                                </td>
+                            <button
+                              onClick={() =>
+                                handleDeleteBlock(
+                                  block
+                                )
+                              }
+                              disabled={
+                                saving ||
+                                block
+                                  .rooms
+                                  .length >
+                                  0
+                              }
+                              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                              title={
+                                block
+                                  .rooms
+                                  .length >
+                                0
+                                  ? "Delete all rooms first"
+                                  : "Delete block"
+                              }
+                            >
+                              🗑️ Delete Block
+                            </button>
+                          </div>
 
-                                <td className="px-6 py-4">
-                                  <div className="flex flex-wrap gap-2">
-                                    <button
-                                      onClick={() =>
-                                        startEditRoom(
-                                          room
-                                        )
-                                      }
-                                      className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/20"
-                                    >
-                                      ✏️ Edit
-                                    </button>
+                          {/* No Rooms */}
 
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteRoom(
-                                          room
-                                        )
-                                      }
-                                      disabled={
-                                        saving ||
-                                        room.occupied >
-                                          0
-                                      }
-                                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-                                      title={
-                                        room.occupied >
-                                        0
-                                          ? "Students are allocated to this room"
-                                          : "Delete room"
-                                      }
-                                    >
-                                      🗑️ Delete
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            )
+                          {block.rooms
+                            .length ===
+                          0 ? (
+                            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 text-sm text-slate-500">
+                              No rooms have been
+                              added to this
+                              block yet.
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto rounded-xl border border-white/10">
+                              <table className="w-full text-left">
+                                <thead className="border-b border-white/10 bg-white/[0.02]">
+                                  <tr>
+                                    <th className="px-5 py-4 text-sm">
+                                      Room
+                                    </th>
+
+                                    <th className="px-5 py-4 text-sm">
+                                      Capacity
+                                    </th>
+
+                                    <th className="px-5 py-4 text-sm">
+                                      Occupied
+                                    </th>
+
+                                    <th className="px-5 py-4 text-sm">
+                                      Available
+                                    </th>
+
+                                    <th className="px-5 py-4 text-sm">
+                                      Actions
+                                    </th>
+                                  </tr>
+                                </thead>
+
+                                <tbody>
+                                  {block.rooms.map(
+                                    (room) => (
+                                      <tr
+                                        key={
+                                          room.id
+                                        }
+                                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                                      >
+                                        <td className="px-5 py-4 font-medium">
+                                          Room{" "}
+                                          {
+                                            room.roomNumber
+                                          }
+                                        </td>
+
+                                        <td className="px-5 py-4 text-slate-300">
+                                          {
+                                            room.capacity
+                                          }
+                                        </td>
+
+                                        <td className="px-5 py-4 text-slate-300">
+                                          {
+                                            room.occupied
+                                          }
+                                        </td>
+
+                                        <td className="px-5 py-4">
+                                          <span className="font-semibold text-green-400">
+                                            {Math.max(
+                                              room.capacity -
+                                                room.occupied,
+                                              0
+                                            )}
+                                          </span>
+                                        </td>
+
+                                        <td className="px-5 py-4">
+                                          <div className="flex flex-wrap gap-2">
+                                            <button
+                                              onClick={() =>
+                                                startEditRoom(
+                                                  room
+                                                )
+                                              }
+                                              className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/20"
+                                            >
+                                              ✏️ Edit
+                                            </button>
+
+                                            <button
+                                              onClick={() =>
+                                                handleDeleteRoom(
+                                                  room
+                                                )
+                                              }
+                                              disabled={
+                                                saving ||
+                                                room.occupied >
+                                                  0
+                                              }
+                                              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                              title={
+                                                room.occupied >
+                                                0
+                                                  ? "Students are allocated to this room"
+                                                  : "Delete room"
+                                              }
+                                            >
+                                              🗑️ Delete
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
                           )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
               );
             })}

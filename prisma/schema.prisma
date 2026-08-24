@@ -40,21 +40,21 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  student   Student?
+  student Student?
 }
 
 model Student {
-  id            Int      @id @default(autoincrement())
-  studentId     String   @unique
-  name          String
-  email         String   @unique
-  phone         String?
-  department    String?
-  year          Int?
-  createdAt     DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  studentId  String   @unique
+  name       String
+  email      String   @unique
+  phone      String?
+  department String?
+  year       Int?
+  createdAt  DateTime @default(now())
 
-  userId        Int      @unique
-  user          User     @relation(fields: [userId], references: [id])
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
 
   allocations   RoomAllocation[]
   fees          Fee[]
@@ -68,32 +68,47 @@ model Hostel {
   block     String
   createdAt DateTime @default(now())
 
-  rooms     Room[]
+  blocks Block[]
+  rooms  Room[]
+}
+
+model Block {
+  id       Int    @id @default(autoincrement())
+  name     String
+  hostelId Int
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  rooms Room[]
+
+  @@unique([hostelId, name])
 }
 
 model Room {
-  id          Int      @id @default(autoincrement())
-  roomNumber  String
-  capacity    Int
-  occupied    Int      @default(0)
+  id         Int    @id @default(autoincrement())
+  roomNumber String
+  capacity   Int
+  occupied   Int    @default(0)
 
-  hostelId    Int
-  hostel      Hostel   @relation(fields: [hostelId], references: [id])
+  hostelId Int
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  blockId Int
+  block   Block @relation(fields: [blockId], references: [id])
 
   allocations RoomAllocation[]
 
-  @@unique([hostelId, roomNumber])
+  @@unique([blockId, roomNumber])
 }
 
 model RoomAllocation {
   id          Int      @id @default(autoincrement())
   allocatedAt DateTime @default(now())
 
-  studentId   Int
-  student     Student  @relation(fields: [studentId], references: [id])
+  studentId Int
+  student   Student @relation(fields: [studentId], references: [id])
 
-  roomId      Int
-  room        Room     @relation(fields: [roomId], references: [id])
+  roomId Int
+  room   Room @relation(fields: [roomId], references: [id])
 
   @@unique([studentId, roomId])
 }
@@ -107,7 +122,7 @@ model Fee {
   createdAt DateTime  @default(now())
 
   studentId Int
-  student   Student   @relation(fields: [studentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
 }
 
 model Complaint {
@@ -118,21 +133,21 @@ model Complaint {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  studentId   Int
-  student     Student        @relation(fields: [studentId], references: [id])
+  studentId Int
+  student   Student @relation(fields: [studentId], references: [id])
 }
 
 model LeaveApplication {
-  id         Int         @id @default(autoincrement())
-  fromDate   DateTime
-  toDate     DateTime
-  reason     String      @db.Text
-  status     LeaveStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id        Int         @id @default(autoincrement())
+  fromDate  DateTime
+  toDate    DateTime
+  reason    String      @db.Text
+  status    LeaveStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  studentId  Int
-  student    Student    @relation(fields: [studentId], references: [id])
+  studentId Int
+  student   Student @relation(fields: [studentId], references: [id])
 }
 
 model Notice {

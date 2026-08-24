@@ -17,34 +17,71 @@ export async function POST(request: Request) {
 
     const {
       hostelId,
+      blockId,
       roomNumber,
       capacity,
     } = body;
 
-    if (!hostelId || !roomNumber || !capacity) {
+    if (
+      !hostelId ||
+      !blockId ||
+      !roomNumber ||
+      !capacity
+    ) {
       return NextResponse.json(
         {
           message:
-            "Hostel, room number and capacity are required",
+            "Hostel, block, room number and capacity are required",
         },
         { status: 400 }
       );
     }
 
+    const hostelIdNumber = Number(hostelId);
+    const blockIdNumber = Number(blockId);
     const capacityNumber = Number(capacity);
+    const cleanRoomNumber = String(roomNumber).trim();
 
-    if (!Number.isInteger(capacityNumber) || capacityNumber < 1) {
+    if (
+      !Number.isInteger(hostelIdNumber) ||
+      hostelIdNumber <= 0
+    ) {
       return NextResponse.json(
-        {
-          message: "Capacity must be at least 1",
-        },
+        { message: "Invalid hostel ID" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isInteger(blockIdNumber) ||
+      blockIdNumber <= 0
+    ) {
+      return NextResponse.json(
+        { message: "Invalid block ID" },
+        { status: 400 }
+      );
+    }
+
+    if (!cleanRoomNumber) {
+      return NextResponse.json(
+        { message: "Room number is required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isInteger(capacityNumber) ||
+      capacityNumber < 1
+    ) {
+      return NextResponse.json(
+        { message: "Capacity must be at least 1" },
         { status: 400 }
       );
     }
 
     const hostel = await prisma.hostel.findUnique({
       where: {
-        id: Number(hostelId),
+        id: hostelIdNumber,
       },
     });
 
@@ -55,10 +92,35 @@ export async function POST(request: Request) {
       );
     }
 
+    const block = await prisma.block.findUnique({
+      where: {
+        id: blockIdNumber,
+      },
+    });
+
+    if (!block) {
+      return NextResponse.json(
+        { message: "Block not found" },
+        { status: 404 }
+      );
+    }
+
+    // Make sure the block actually belongs to the selected hostel.
+    if (block.hostelId !== hostelIdNumber) {
+      return NextResponse.json(
+        {
+          message:
+            "Selected block does not belong to this hostel",
+        },
+        { status: 400 }
+      );
+    }
+
     const room = await prisma.room.create({
       data: {
-        hostelId: Number(hostelId),
-        roomNumber: String(roomNumber).trim(),
+        hostelId: hostelIdNumber,
+        blockId: blockIdNumber,
+        roomNumber: cleanRoomNumber,
         capacity: capacityNumber,
         occupied: 0,
       },
@@ -74,7 +136,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           message:
-            "This room already exists in this hostel",
+            "This room already exists in this block",
         },
         { status: 409 }
       );
