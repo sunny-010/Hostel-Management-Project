@@ -60,12 +60,14 @@ export default function Home() {
             <a href="#home" className="text-sm text-white">
               Home
             </a>
+
             <a
               href="#features"
               className="text-sm text-slate-400 transition hover:text-white"
             >
               Features
             </a>
+
             <a
               href="#about"
               className="text-sm text-slate-400 transition hover:text-white"
@@ -95,7 +97,9 @@ export default function Home() {
 
           <h2 className="text-4xl font-extrabold tracking-tight md:text-6xl">
             Manage Your Hostel
-            <span className="block text-blue-500">Smarter &amp; Faster</span>
+            <span className="block text-blue-500">
+              Smarter &amp; Faster
+            </span>
           </h2>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-400">
@@ -104,19 +108,27 @@ export default function Home() {
             operations.
           </p>
 
-          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+          {/* Login Options */}
+          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row sm:flex-wrap">
             <a
-              href="/login"
+              href="/login?role=STUDENT"
               className="rounded-xl bg-blue-600 px-7 py-3.5 font-semibold transition hover:bg-blue-500"
             >
-              Student Login →
+              🎓 Student Login →
             </a>
 
             <a
-              href="/login"
+              href="/login?role=ADMIN"
               className="rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 font-semibold transition hover:bg-white/10"
             >
-              Admin Login
+              👨‍💼 Admin Login
+            </a>
+
+            <a
+              href="/login?role=SUPERADMIN"
+              className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-7 py-3.5 font-semibold text-blue-300 transition hover:bg-blue-500/20"
+            >
+              👑 Super Admin Login
             </a>
           </div>
         </div>
@@ -184,11 +196,10 @@ export default function Home() {
       <footer className="border-t border-white/10 px-6 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-sm text-slate-500 md:flex-row">
           <p>© 2026 HostelHub, Hostel Management System</p>
-          
-
           <p>Amity University Kolkata</p>
         </div>
       </footer>
     </main>
   );
 }
+

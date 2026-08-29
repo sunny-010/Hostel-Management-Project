@@ -1,7 +1,10 @@
-
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
+
 import { requireAdmin } from "@/lib/auth";
+
+import { createAuditLog } from "@/lib/audit";
 
 type Params = {
   params: Promise<{
@@ -24,9 +27,13 @@ export async function PUT(
 
   try {
     const { id } = await params;
+
     const roomId = Number(id);
 
-    if (!Number.isInteger(roomId) || roomId <= 0) {
+    if (
+      !Number.isInteger(roomId) ||
+      roomId <= 0
+    ) {
       return NextResponse.json(
         { message: "Invalid room ID" },
         { status: 400 }
@@ -69,6 +76,10 @@ export async function PUT(
         where: {
           id: roomId,
         },
+        include: {
+          hostel: true,
+          block: true,
+        },
       });
 
     if (!existingRoom) {
@@ -82,7 +93,8 @@ export async function PUT(
     if (capacity < existingRoom.occupied) {
       return NextResponse.json(
         {
-          message: `Capacity cannot be less than current occupancy (${existingRoom.occupied})`,
+          message:
+            `Capacity cannot be less than current occupancy (${existingRoom.occupied})`,
         },
         { status: 400 }
       );
@@ -110,19 +122,44 @@ export async function PUT(
     }
 
     const updatedRoom =
-      await prisma.room.update({
-        where: {
-          id: roomId,
-        },
-        data: {
-          roomNumber,
-          capacity,
-        },
-      });
+      await prisma.$transaction(
+        async (tx) => {
+          const room =
+            await tx.room.update({
+              where: {
+                id: roomId,
+              },
+              data: {
+                roomNumber,
+                capacity,
+              },
+            });
+
+          await createAuditLog({
+            db: tx,
+
+            actorId: user.id,
+            actorName: user.name,
+            actorEmail: user.email,
+
+            action: "UPDATE",
+            entity: "ROOM",
+            entityId: room.id,
+
+            description:
+              `Updated room "${existingRoom.roomNumber}" to "${room.roomNumber}" in hostel "${existingRoom.hostel.name}", block "${existingRoom.block.name}". Capacity changed from ${existingRoom.capacity} to ${room.capacity}.`,
+          });
+
+          return room;
+        }
+      );
 
     return NextResponse.json(updatedRoom);
   } catch (error: any) {
-    console.error("Update room error:", error);
+    console.error(
+      "Update room error:",
+      error
+    );
 
     if (error?.code === "P2002") {
       return NextResponse.json(
@@ -135,7 +172,9 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { message: "Failed to update room" },
+      {
+        message: "Failed to update room",
+      },
       { status: 500 }
     );
   }
@@ -156,27 +195,34 @@ export async function DELETE(
 
   try {
     const { id } = await params;
+
     const roomId = Number(id);
 
-    if (!Number.isInteger(roomId) || roomId <= 0) {
+    if (
+      !Number.isInteger(roomId) ||
+      roomId <= 0
+    ) {
       return NextResponse.json(
         { message: "Invalid room ID" },
         { status: 400 }
       );
     }
 
-    const room = await prisma.room.findUnique({
-      where: {
-        id: roomId,
-      },
-      include: {
-        _count: {
-          select: {
-            allocations: true,
+    const room =
+      await prisma.room.findUnique({
+        where: {
+          id: roomId,
+        },
+        include: {
+          hostel: true,
+          block: true,
+          _count: {
+            select: {
+              allocations: true,
+            },
           },
         },
-      },
-    });
+      });
 
     if (!room) {
       return NextResponse.json(
@@ -198,17 +244,39 @@ export async function DELETE(
       );
     }
 
-    await prisma.room.delete({
-      where: {
-        id: roomId,
-      },
-    });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.room.delete({
+          where: {
+            id: roomId,
+          },
+        });
+
+        await createAuditLog({
+          db: tx,
+
+          actorId: user.id,
+          actorName: user.name,
+          actorEmail: user.email,
+
+          action: "DELETE",
+          entity: "ROOM",
+          entityId: room.id,
+
+          description:
+            `Deleted room "${room.roomNumber}" from hostel "${room.hostel.name}", block "${room.block.name}".`,
+        });
+      }
+    );
 
     return NextResponse.json({
       message: "Room deleted successfully",
     });
   } catch (error: any) {
-    console.error("Delete room error:", error);
+    console.error(
+      "Delete room error:",
+      error
+    );
 
     if (error?.code === "P2003") {
       return NextResponse.json(
@@ -221,7 +289,9 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Failed to delete room" },
+      {
+        message: "Failed to delete room",
+      },
       { status: 500 }
     );
   }

@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
+/* -------------------------------------------------------------------------- */
+/* GET - GET COMPLAINTS                                                       */
+/* -------------------------------------------------------------------------- */
 /*
-|--------------------------------------------------------------------------
-| GET - Get complaints
-|--------------------------------------------------------------------------
-| Resolved complaints remain visible for 24 hours.
-| After 24 hours they are hidden from the admin page,
-| but they are NOT deleted from the database.
-|--------------------------------------------------------------------------
-*/
+ * Resolved complaints remain visible for 24 hours.
+ * After 24 hours they are hidden from the admin page,
+ * but they are NOT deleted from the database.
+ */
 
 export async function GET() {
   const user = await requireAdmin();
@@ -79,26 +80,24 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        message: "Failed to fetch complaints",
+        message:
+          "Failed to fetch complaints",
       },
       { status: 500 }
     );
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* POST - CREATE COMPLAINT                                                    */
+/* -------------------------------------------------------------------------- */
 /*
-|--------------------------------------------------------------------------
-| POST - Create complaint
-|--------------------------------------------------------------------------
-| This route is included for completeness.
-| Normally students should create complaints through
-| the student complaint API.
-|--------------------------------------------------------------------------
-*/
+ * This route is included for completeness.
+ * Normally students should create complaints through
+ * the student complaint API.
+ */
 
-export async function POST(
-  request: Request
-) {
+export async function POST(request: Request) {
   const user = await requireAdmin();
 
   if (!user) {
@@ -162,31 +161,55 @@ export async function POST(
     }
 
     const complaint =
-      await prisma.complaint.create({
-        data: {
-          studentId: studentIdNumber,
-          title: String(title).trim(),
-          description:
-            String(description).trim(),
-          status: "PENDING",
-        },
+      await prisma.$transaction(
+        async (tx) => {
+          const newComplaint =
+            await tx.complaint.create({
+              data: {
+                studentId:
+                  studentIdNumber,
+                title:
+                  String(title).trim(),
+                description:
+                  String(
+                    description
+                  ).trim(),
+                status: "PENDING",
+              },
 
-        include: {
-          student: {
-            include: {
-              allocations: {
-                include: {
-                  room: {
-                    include: {
-                      hostel: true,
+              include: {
+                student: {
+                  include: {
+                    allocations: {
+                      include: {
+                        room: {
+                          include: {
+                            hostel: true,
+                          },
+                        },
+                      },
                     },
                   },
                 },
               },
-            },
-          },
-        },
-      });
+            });
+
+          await createAuditLog({
+            actorId: user.id,
+            actorName: user.name,
+            actorEmail: user.email,
+            action: "CREATE",
+            entity: "COMPLAINT",
+            entityId:
+              newComplaint.id,
+            description:
+              `Created complaint "${newComplaint.title}" for student "${student.name}" (${student.email}).`,
+            db: tx,
+          });
+
+          return newComplaint;
+        }
+      );
 
     return NextResponse.json(
       complaint,
@@ -210,27 +233,24 @@ export async function POST(
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* PATCH - UPDATE COMPLAINT STATUS                                            */
+/* -------------------------------------------------------------------------- */
 /*
-|--------------------------------------------------------------------------
-| PATCH - Update complaint status
-|--------------------------------------------------------------------------
-| Supported statuses:
-| PENDING
-| IN_PROGRESS
-| RESOLVED
-| REJECTED
-|
-| When status becomes RESOLVED, Prisma automatically
-| updates updatedAt because of @updatedAt in schema.prisma.
-|
-| The GET route uses updatedAt to determine the
-| 24-hour visibility period.
-|--------------------------------------------------------------------------
-*/
+ * Supported statuses:
+ * PENDING
+ * IN_PROGRESS
+ * RESOLVED
+ * REJECTED
+ *
+ * When status becomes RESOLVED, Prisma automatically
+ * updates updatedAt because of @updatedAt in schema.prisma.
+ *
+ * The GET route uses updatedAt to determine the
+ * 24-hour visibility period.
+ */
 
-export async function PATCH(
-  request: Request
-) {
+export async function PATCH(request: Request) {
   const user = await requireAdmin();
 
   if (!user) {
@@ -274,7 +294,8 @@ export async function PATCH(
       );
     }
 
-    const complaintId = Number(id);
+    const complaintId =
+      Number(id);
 
     if (
       Number.isNaN(complaintId)
@@ -293,43 +314,67 @@ export async function PATCH(
         where: {
           id: complaintId,
         },
+        include: {
+          student: true,
+        },
       });
 
     if (!complaint) {
       return NextResponse.json(
         {
-          message: "Complaint not found",
+          message:
+            "Complaint not found",
         },
         { status: 404 }
       );
     }
 
     const updatedComplaint =
-      await prisma.complaint.update({
-        where: {
-          id: complaintId,
-        },
+      await prisma.$transaction(
+        async (tx) => {
+          const updated =
+            await tx.complaint.update({
+              where: {
+                id: complaintId,
+              },
 
-        data: {
-          status,
-        },
+              data: {
+                status,
+              },
 
-        include: {
-          student: {
-            include: {
-              allocations: {
-                include: {
-                  room: {
-                    include: {
-                      hostel: true,
+              include: {
+                student: {
+                  include: {
+                    allocations: {
+                      include: {
+                        room: {
+                          include: {
+                            hostel: true,
+                          },
+                        },
+                      },
                     },
                   },
                 },
               },
-            },
-          },
-        },
-      });
+            });
+
+          await createAuditLog({
+            actorId: user.id,
+            actorName: user.name,
+            actorEmail: user.email,
+            action: "UPDATE",
+            entity: "COMPLAINT",
+            entityId:
+              complaint.id,
+            description:
+              `Updated complaint "${complaint.title}" for student "${complaint.student.name}" (${complaint.student.email}) from status "${complaint.status}" to "${status}".`,
+            db: tx,
+          });
+
+          return updated;
+        }
+      );
 
     return NextResponse.json(
       updatedComplaint

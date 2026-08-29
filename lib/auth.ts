@@ -1,3 +1,4 @@
+
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
@@ -23,6 +24,10 @@ export async function getCurrentUser() {
       },
     });
 
+    if (!user || user.status !== "ACTIVE") {
+      return null;
+    }
+
     return user;
   } catch (error) {
     console.error("Get current user error:", error);
@@ -35,6 +40,16 @@ export async function requireAdmin() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "ADMIN") {
+    return null;
+  }
+
+  return user;
+}
+
+export async function requireSuperAdmin() {
+  const user = await getCurrentUser();
+
+  if (!user || user.role !== "SUPER_ADMIN") {
     return null;
   }
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -22,6 +23,13 @@ type Hostel = {
   blocks: Block[];
 };
 
+type AdminProfile = {
+  name: string;
+  email: string;
+  profileImage: string | null;
+  role: "ADMIN" | "SUPER_ADMIN" | "STUDENT";
+};
+
 type RoomDetails = {
   room: {
     id: number;
@@ -30,14 +38,17 @@ type RoomDetails = {
     occupied: number;
     available: number;
   };
+
   hostel: {
     id: number;
     name: string;
   };
+
   block: {
     id: number;
     name: string;
   };
+
   students: {
     id: number;
     studentId: string;
@@ -104,6 +115,9 @@ export default function AdminDashboard() {
 
   const [hostels, setHostels] = useState<Hostel[]>([]);
 
+  const [profile, setProfile] =
+    useState<AdminProfile | null>(null);
+
   const [selectedHostelId, setSelectedHostelId] =
     useState("");
 
@@ -117,6 +131,7 @@ export default function AdminDashboard() {
     useState<RoomDetails | null>(null);
 
   const [loading, setLoading] = useState(true);
+
   const [loadingRoomDetails, setLoadingRoomDetails] =
     useState(false);
 
@@ -126,17 +141,21 @@ export default function AdminDashboard() {
     useState(false);
 
   // --------------------------------------------------
-  // Load dashboard statistics and hostels
+  // Load dashboard statistics, hostels and profile
   // --------------------------------------------------
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [statsResponse, hostelsResponse] =
-          await Promise.all([
-            fetch("/api/admin/stats"),
-            fetch("/api/admin/hostels"),
-          ]);
+        const [
+          statsResponse,
+          hostelsResponse,
+          profileResponse,
+        ] = await Promise.all([
+          fetch("/api/admin/stats"),
+          fetch("/api/admin/hostels"),
+          fetch("/api/profile"),
+        ]);
 
         if (!statsResponse.ok) {
           throw new Error(
@@ -150,14 +169,24 @@ export default function AdminDashboard() {
           );
         }
 
+        if (!profileResponse.ok) {
+          throw new Error(
+            "Failed to load profile"
+          );
+        }
+
         const statsData =
           await statsResponse.json();
 
         const hostelsData =
           await hostelsResponse.json();
 
+        const profileData =
+          await profileResponse.json();
+
         setStats(statsData);
         setHostels(hostelsData);
+        setProfile(profileData.user);
       } catch (error) {
         console.error(
           "Failed to load dashboard data:",
@@ -184,18 +213,17 @@ export default function AdminDashboard() {
   // Selected block
   // --------------------------------------------------
 
-  const selectedBlock = selectedHostel?.blocks.find(
-    (block) =>
-      String(block.id) === selectedBlockId
-  );
+  const selectedBlock =
+    selectedHostel?.blocks.find(
+      (block) =>
+        String(block.id) === selectedBlockId
+    );
 
   // --------------------------------------------------
   // Hostel change
   // --------------------------------------------------
 
-  function handleHostelChange(
-    value: string
-  ) {
+  function handleHostelChange(value: string) {
     setSelectedHostelId(value);
     setSelectedBlockId("");
     setSelectedRoomId("");
@@ -207,9 +235,7 @@ export default function AdminDashboard() {
   // Block change
   // --------------------------------------------------
 
-  function handleBlockChange(
-    value: string
-  ) {
+  function handleBlockChange(value: string) {
     setSelectedBlockId(value);
     setSelectedRoomId("");
     setRoomDetails(null);
@@ -220,9 +246,7 @@ export default function AdminDashboard() {
   // Room change
   // --------------------------------------------------
 
-  async function handleRoomChange(
-    value: string
-  ) {
+  async function handleRoomChange(value: string) {
     setSelectedRoomId(value);
     setRoomDetails(null);
     setRoomError("");
@@ -333,6 +357,9 @@ export default function AdminDashboard() {
 
       <header className="border-b border-white/10 bg-slate-950/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+
+          {/* Logo */}
+
           <Link
             href="/"
             className="flex items-center gap-3"
@@ -352,29 +379,63 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Right Side */}
+
           <div className="flex items-center gap-4">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold">
-                Hostel Administrator
-              </p>
 
-              <p className="text-xs text-slate-400">
-                Administrator
-              </p>
-            </div>
+            {/* Admin Profile */}
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600">
-              A
-            </div>
+            <Link
+              href="/profile"
+              className="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/5"
+              title="My Profile"
+              aria-label="My Profile"
+            >
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-semibold">
+                  {profile?.name ||
+                    "Administrator"}
+                </p>
+
+                <p className="text-xs text-slate-400">
+                  Administrator
+                </p>
+              </div>
+
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold">
+                {profile?.profileImage ? (
+                  <img
+                    src={profile.profileImage}
+                    alt={profile.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  profile?.name
+                    ?.charAt(0)
+                    .toUpperCase() || "A"
+                )}
+              </div>
+            </Link>
+
+            {/* Logout */}
 
             <button
+              type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              title={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
+              aria-label={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loggingOut
-                ? "Logging out..."
-                : "Logout"}
+              {loggingOut ? "⏳" : "⏻"}
             </button>
           </div>
         </div>
@@ -383,6 +444,7 @@ export default function AdminDashboard() {
       {/* Dashboard */}
 
       <section className="mx-auto max-w-7xl px-6 py-10">
+
         {/* Heading */}
 
         <div className="mb-10">
@@ -450,9 +512,11 @@ export default function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+
             {/* Selectors */}
 
             <div className="grid gap-5 md:grid-cols-3">
+
               {/* Hostel */}
 
               <div>
@@ -498,9 +562,7 @@ export default function AdminDashboard() {
                       e.target.value
                     )
                   }
-                  disabled={
-                    !selectedHostelId
-                  }
+                  disabled={!selectedHostelId}
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">
@@ -536,9 +598,7 @@ export default function AdminDashboard() {
                       e.target.value
                     )
                   }
-                  disabled={
-                    !selectedBlockId
-                  }
+                  disabled={!selectedBlockId}
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">
@@ -582,10 +642,12 @@ export default function AdminDashboard() {
             {roomDetails &&
               !loadingRoomDetails && (
                 <div className="mt-8">
+
                   {/* Location */}
 
                   <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
                     <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+
                       <div>
                         <p className="text-sm text-slate-400">
                           Selected Location
@@ -610,6 +672,9 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-3">
+
+                        {/* Capacity */}
+
                         <div className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center">
                           <p className="text-xs text-slate-500">
                             Capacity
@@ -624,6 +689,8 @@ export default function AdminDashboard() {
                           </p>
                         </div>
 
+                        {/* Occupied */}
+
                         <div className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center">
                           <p className="text-xs text-slate-500">
                             Occupied
@@ -637,6 +704,8 @@ export default function AdminDashboard() {
                             }
                           </p>
                         </div>
+
+                        {/* Available */}
 
                         <div className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-center">
                           <p className="text-xs text-slate-500">
@@ -821,3 +890,4 @@ export default function AdminDashboard() {
     </main>
   );
 }
+

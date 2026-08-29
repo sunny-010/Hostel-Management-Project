@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
+
+/* -------------------------------------------------------------------------- */
+/* CREATE BLOCK                                                               */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(request: Request) {
   const user = await requireAdmin();
@@ -45,11 +51,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const block = await prisma.block.create({
-      data: {
-        name,
-        hostelId,
-      },
+    const block = await prisma.$transaction(async (tx) => {
+      const newBlock = await tx.block.create({
+        data: {
+          name,
+          hostelId,
+        },
+      });
+
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "CREATE",
+        entity: "BLOCK",
+        entityId: newBlock.id,
+        description: `Created block "${newBlock.name}" in hostel "${hostel.name}".`,
+        db: tx,
+      });
+
+      return newBlock;
     });
 
     return NextResponse.json(block, {
@@ -74,6 +95,107 @@ export async function POST(request: Request) {
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* UPDATE BLOCK                                                               */
+/* -------------------------------------------------------------------------- */
+
+export async function PUT(request: Request) {
+  const user = await requireAdmin();
+
+  if (!user) {
+    return NextResponse.json(
+      { message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+
+    const blockId = Number(body.id);
+    const name = String(body.name ?? "").trim();
+
+    if (!Number.isInteger(blockId) || blockId <= 0) {
+      return NextResponse.json(
+        { message: "Invalid block ID" },
+        { status: 400 }
+      );
+    }
+
+    if (!name) {
+      return NextResponse.json(
+        { message: "Block name is required" },
+        { status: 400 }
+      );
+    }
+
+    const block = await prisma.block.findUnique({
+      where: {
+        id: blockId,
+      },
+      include: {
+        hostel: true,
+      },
+    });
+
+    if (!block) {
+      return NextResponse.json(
+        { message: "Block not found" },
+        { status: 404 }
+      );
+    }
+
+    const updatedBlock = await prisma.$transaction(
+      async (tx) => {
+        const updated = await tx.block.update({
+          where: {
+            id: blockId,
+          },
+          data: {
+            name,
+          },
+        });
+
+        await createAuditLog({
+          actorId: user.id,
+          actorName: user.name,
+          actorEmail: user.email,
+          action: "UPDATE",
+          entity: "BLOCK",
+          entityId: updated.id,
+          description: `Updated block "${block.name}" to "${updated.name}" in hostel "${block.hostel.name}".`,
+          db: tx,
+        });
+
+        return updated;
+      }
+    );
+
+    return NextResponse.json(updatedBlock);
+  } catch (error: any) {
+    console.error("Update block error:", error);
+
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        {
+          message:
+            "This block already exists in this hostel",
+        },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Failed to update block" },
+      { status: 500 }
+    );
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* DELETE BLOCK                                                               */
+/* -------------------------------------------------------------------------- */
 
 export async function DELETE(request: Request) {
   const user = await requireAdmin();
@@ -102,6 +224,7 @@ export async function DELETE(request: Request) {
         id: blockId,
       },
       include: {
+        hostel: true,
         _count: {
           select: {
             rooms: true,
@@ -127,10 +250,23 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.block.delete({
-      where: {
-        id: blockId,
-      },
+    await prisma.$transaction(async (tx) => {
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "DELETE",
+        entity: "BLOCK",
+        entityId: block.id,
+        description: `Deleted block "${block.name}" from hostel "${block.hostel.name}".`,
+        db: tx,
+      });
+
+      await tx.block.delete({
+        where: {
+          id: blockId,
+        },
+      });
     });
 
     return NextResponse.json({

@@ -4,39 +4,91 @@ import Link from "next/link";
 import {
   FormEvent,
   useEffect,
+  useMemo,
   useState,
 } from "react";
+
+type Room = {
+  id: number;
+  roomNumber: string;
+  capacity: number;
+  occupied: number;
+};
+
+type Block = {
+  id: number;
+  name: string;
+  rooms: Room[];
+};
+
+type Hostel = {
+  id: number;
+  name: string;
+  blocks: Block[];
+  rooms?: Room[];
+};
 
 type Student = {
   id: number;
   studentId: string;
   name: string;
   email: string;
+  phone?: string | null;
+  department?: string | null;
+  year?: number | null;
+  hostel?: {
+    id: number;
+    name: string;
+  } | null;
+  block?: {
+    id: number;
+    name: string;
+  } | null;
+  room?: {
+    id: number;
+    roomNumber: string;
+  } | null;
 };
+
+type FeeStatus =
+  | "PENDING"
+  | "PAID"
+  | "OVERDUE";
 
 type Fee = {
   id: number;
   amount: string;
-  status:
-    | "PENDING"
-    | "PAID"
-    | "OVERDUE";
+  status: FeeStatus;
   dueDate: string;
   paidDate: string | null;
+  createdAt?: string;
   student: Student;
 };
 
 export default function FeesPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+
+  /* --------------------------------------------------
+     CREATE FEE
+  -------------------------------------------------- */
 
   const [studentId, setStudentId] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  /* --------------------------------------------------
+     GENERAL STATE
+  -------------------------------------------------- */
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  /* --------------------------------------------------
+     EDIT FEE
+  -------------------------------------------------- */
 
   const [editingFeeId, setEditingFeeId] =
     useState<number | null>(null);
@@ -48,23 +100,59 @@ export default function FeesPage() {
     useState("");
 
   const [editStatus, setEditStatus] =
-    useState<
-      "PENDING" | "PAID" | "OVERDUE"
-    >("PENDING");
+    useState<FeeStatus>("PENDING");
 
-  async function loadData() {
+  /* --------------------------------------------------
+     SEARCH / FILTERS
+  -------------------------------------------------- */
+
+  const [search, setSearch] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchActive, setSearchActive] =
+    useState(false);
+
+  const [selectedHostelId, setSelectedHostelId] =
+    useState("");
+
+  const [selectedBlockId, setSelectedBlockId] =
+    useState("");
+
+  const [selectedRoomId, setSelectedRoomId] =
+    useState("");
+
+  const [selectedStatus, setSelectedStatus] =
+    useState<"" | FeeStatus>("");
+
+  /* --------------------------------------------------
+     LOAD DATA
+  -------------------------------------------------- */
+
+  async function loadData(searchTerm = "") {
     try {
+      setSearching(Boolean(searchTerm));
+
       const [
         studentsResponse,
         feesResponse,
+        hostelsResponse,
       ] = await Promise.all([
         fetch("/api/admin/students"),
-        fetch("/api/admin/fees"),
+        fetch(
+          `/api/admin/fees${
+            searchTerm
+              ? `?search=${encodeURIComponent(
+                  searchTerm
+                )}`
+              : ""
+          }`
+        ),
+        fetch("/api/admin/hostels"),
       ]);
 
       if (
         !studentsResponse.ok ||
-        !feesResponse.ok
+        !feesResponse.ok ||
+        !hostelsResponse.ok
       ) {
         throw new Error(
           "Failed to load data"
@@ -77,8 +165,12 @@ export default function FeesPage() {
       const feesData =
         await feesResponse.json();
 
+      const hostelsData =
+        await hostelsResponse.json();
+
       setStudents(studentsData);
       setFees(feesData);
+      setHostels(hostelsData);
     } catch (error) {
       console.error(
         "Load fees data error:",
@@ -90,6 +182,7 @@ export default function FeesPage() {
       );
     } finally {
       setLoading(false);
+      setSearching(false);
     }
   }
 
@@ -97,9 +190,191 @@ export default function FeesPage() {
     loadData();
   }, []);
 
-  // --------------------------------
-  // CREATE FEE
-  // --------------------------------
+  /* --------------------------------------------------
+     SELECTED HOSTEL
+  -------------------------------------------------- */
+
+  const selectedHostel = useMemo(() => {
+    return hostels.find(
+      (hostel) =>
+        String(hostel.id) ===
+        selectedHostelId
+    );
+  }, [
+    hostels,
+    selectedHostelId,
+  ]);
+
+  /* --------------------------------------------------
+     SELECTED BLOCK
+  -------------------------------------------------- */
+
+  const selectedBlock = useMemo(() => {
+    return selectedHostel?.blocks?.find(
+      (block) =>
+        String(block.id) ===
+        selectedBlockId
+    );
+  }, [
+    selectedHostel,
+    selectedBlockId,
+  ]);
+
+  /* --------------------------------------------------
+     AVAILABLE ROOMS
+  -------------------------------------------------- */
+
+  const availableRooms = useMemo(() => {
+    if (!selectedBlock) {
+      return [];
+    }
+
+    return selectedBlock.rooms || [];
+  }, [selectedBlock]);
+
+  /* --------------------------------------------------
+     HOSTEL CHANGE
+  -------------------------------------------------- */
+
+  function handleHostelChange(
+    value: string
+  ) {
+    setSelectedHostelId(value);
+    setSelectedBlockId("");
+    setSelectedRoomId("");
+  }
+
+  /* --------------------------------------------------
+     BLOCK CHANGE
+  -------------------------------------------------- */
+
+  function handleBlockChange(
+    value: string
+  ) {
+    setSelectedBlockId(value);
+    setSelectedRoomId("");
+  }
+
+  /* --------------------------------------------------
+     ROOM CHANGE
+  -------------------------------------------------- */
+
+  function handleRoomChange(
+    value: string
+  ) {
+    setSelectedRoomId(value);
+  }
+
+  /* --------------------------------------------------
+     STATUS CHANGE
+  -------------------------------------------------- */
+
+  function handleStatusChange(
+    value: "" | FeeStatus
+  ) {
+    setSelectedStatus(value);
+  }
+
+  /* --------------------------------------------------
+     TEXT SEARCH
+  -------------------------------------------------- */
+
+  async function handleFeeSearch(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    const trimmedSearch =
+      search.trim();
+
+    setSearchActive(
+      Boolean(trimmedSearch)
+    );
+
+    await loadData(
+      trimmedSearch
+    );
+  }
+
+  /* --------------------------------------------------
+     CLEAR TEXT SEARCH
+  -------------------------------------------------- */
+
+  async function clearFeeSearch() {
+    setSearch("");
+    setSearchActive(false);
+
+    await loadData("");
+  }
+
+  /* --------------------------------------------------
+     FILTER FEES
+  -------------------------------------------------- */
+
+  const filteredFees = useMemo(() => {
+    return fees.filter((fee) => {
+      const feeHostelId =
+        fee.student.hostel?.id;
+
+      const feeBlockId =
+        fee.student.block?.id;
+
+      const feeRoomId =
+        fee.student.room?.id;
+
+      /* Hostel */
+
+      if (
+        selectedHostelId &&
+        String(feeHostelId) !==
+          selectedHostelId
+      ) {
+        return false;
+      }
+
+      /* Block */
+
+      if (
+        selectedBlockId &&
+        String(feeBlockId) !==
+          selectedBlockId
+      ) {
+        return false;
+      }
+
+      /* Room */
+
+      if (
+        selectedRoomId &&
+        String(feeRoomId) !==
+          selectedRoomId
+      ) {
+        return false;
+      }
+
+      /* Status */
+
+      if (
+        selectedStatus &&
+        fee.status !==
+          selectedStatus
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    fees,
+    selectedHostelId,
+    selectedBlockId,
+    selectedRoomId,
+    selectedStatus,
+  ]);
+
+  /* --------------------------------------------------
+     CREATE FEE
+  -------------------------------------------------- */
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -110,21 +385,22 @@ export default function FeesPage() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "/api/admin/fees",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            studentId,
-            amount,
-            dueDate,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/admin/fees",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              studentId,
+              amount,
+              dueDate,
+            }),
+          }
+        );
 
       const data =
         await response.json();
@@ -145,7 +421,11 @@ export default function FeesPage() {
       setAmount("");
       setDueDate("");
 
-      await loadData();
+      await loadData(
+        searchActive
+          ? search
+          : ""
+      );
     } catch (error) {
       console.error(
         "Create fee error:",
@@ -160,27 +440,39 @@ export default function FeesPage() {
     }
   }
 
-  // --------------------------------
-  // START EDITING
-  // --------------------------------
+  /* --------------------------------------------------
+     START EDITING
+  -------------------------------------------------- */
 
-  function startEditing(fee: Fee) {
+  function startEditing(
+    fee: Fee
+  ) {
     setEditingFeeId(fee.id);
 
     setEditAmount(
-      Number(fee.amount).toString()
+      Number(
+        fee.amount
+      ).toString()
     );
 
     setEditDueDate(
-      new Date(fee.dueDate)
+      new Date(
+        fee.dueDate
+      )
         .toISOString()
         .split("T")[0]
     );
 
-    setEditStatus(fee.status);
+    setEditStatus(
+      fee.status
+    );
 
     setMessage("");
   }
+
+  /* --------------------------------------------------
+     CANCEL EDITING
+  -------------------------------------------------- */
 
   function cancelEditing() {
     setEditingFeeId(null);
@@ -189,17 +481,21 @@ export default function FeesPage() {
     setEditStatus("PENDING");
   }
 
-  // --------------------------------
-  // SAVE EDIT
-  // --------------------------------
+  /* --------------------------------------------------
+     SAVE EDIT
+  -------------------------------------------------- */
 
   async function saveEditedFee(
     id: number
   ) {
-    if (!editAmount || !editDueDate) {
+    if (
+      !editAmount ||
+      !editDueDate
+    ) {
       setMessage(
         "Amount and due date are required"
       );
+
       return;
     }
 
@@ -207,22 +503,26 @@ export default function FeesPage() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "/api/admin/fees",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            id,
-            amount: editAmount,
-            dueDate: editDueDate,
-            status: editStatus,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/admin/fees",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              id,
+              amount:
+                editAmount,
+              dueDate:
+                editDueDate,
+              status:
+                editStatus,
+            }),
+          }
+        );
 
       const data =
         await response.json();
@@ -232,6 +532,7 @@ export default function FeesPage() {
           data.message ||
             "Failed to update fee"
         );
+
         return;
       }
 
@@ -241,7 +542,11 @@ export default function FeesPage() {
 
       cancelEditing();
 
-      await loadData();
+      await loadData(
+        searchActive
+          ? search
+          : ""
+      );
     } catch (error) {
       console.error(
         "Update fee error:",
@@ -256,17 +561,18 @@ export default function FeesPage() {
     }
   }
 
-  // --------------------------------
-  // DELETE FEE
-  // --------------------------------
+  /* --------------------------------------------------
+     DELETE FEE
+  -------------------------------------------------- */
 
   async function deleteFee(
     id: number,
     studentName: string
   ) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete the fee record for ${studentName}?`
-    );
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete the fee record for ${studentName}?`
+      );
 
     if (!confirmed) {
       return;
@@ -276,19 +582,20 @@ export default function FeesPage() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "/api/admin/fees",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            id,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/admin/fees",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              id,
+            }),
+          }
+        );
 
       const data =
         await response.json();
@@ -298,6 +605,7 @@ export default function FeesPage() {
           data.message ||
             "Failed to delete fee"
         );
+
         return;
       }
 
@@ -305,7 +613,11 @@ export default function FeesPage() {
         "Fee deleted successfully!"
       );
 
-      await loadData();
+      await loadData(
+        searchActive
+          ? search
+          : ""
+      );
     } catch (error) {
       console.error(
         "Delete fee error:",
@@ -320,29 +632,32 @@ export default function FeesPage() {
     }
   }
 
-  // --------------------------------
-  // QUICK STATUS UPDATE
-  // --------------------------------
+  /* --------------------------------------------------
+     QUICK STATUS UPDATE
+  -------------------------------------------------- */
 
   async function updateFeeStatus(
     id: number,
-    status: "PAID" | "PENDING"
+    status:
+      | "PAID"
+      | "PENDING"
   ) {
     try {
-      const response = await fetch(
-        "/api/admin/fees",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            id,
-            status,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/admin/fees",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              id,
+              status,
+            }),
+          }
+        );
 
       const data =
         await response.json();
@@ -352,6 +667,7 @@ export default function FeesPage() {
           data.message ||
             "Failed to update fee"
         );
+
         return;
       }
 
@@ -361,7 +677,11 @@ export default function FeesPage() {
           : "Fee marked as pending!"
       );
 
-      await loadData();
+      await loadData(
+        searchActive
+          ? search
+          : ""
+      );
     } catch (error) {
       console.error(
         "Update fee error:",
@@ -374,37 +694,120 @@ export default function FeesPage() {
     }
   }
 
-  const pendingFees = fees.filter(
-    (fee) => fee.status === "PENDING"
-  );
+  /* --------------------------------------------------
+     SUMMARY
+  -------------------------------------------------- */
 
-  const paidFees = fees.filter(
-    (fee) => fee.status === "PAID"
-  );
+  const pendingFees =
+    filteredFees.filter(
+      (fee) =>
+        fee.status ===
+        "PENDING"
+    );
+
+  const overdueFees =
+    filteredFees.filter(
+      (fee) =>
+        fee.status ===
+        "OVERDUE"
+    );
+
+  const paidFees =
+    filteredFees.filter(
+      (fee) =>
+        fee.status ===
+        "PAID"
+    );
 
   const totalPending =
     pendingFees.reduce(
       (total, fee) =>
-        total + Number(fee.amount),
+        total +
+        Number(
+          fee.amount
+        ),
+      0
+    );
+
+  const totalOverdue =
+    overdueFees.reduce(
+      (total, fee) =>
+        total +
+        Number(
+          fee.amount
+        ),
       0
     );
 
   const totalPaid =
     paidFees.reduce(
       (total, fee) =>
-        total + Number(fee.amount),
+        total +
+        Number(
+          fee.amount
+        ),
       0
     );
 
+  /* --------------------------------------------------
+     CLEAR LOCATION FILTERS
+  -------------------------------------------------- */
+
+  function clearLocationFilters() {
+    setSelectedHostelId("");
+    setSelectedBlockId("");
+    setSelectedRoomId("");
+  }
+
+  /* --------------------------------------------------
+     CLEAR ALL FILTERS
+  -------------------------------------------------- */
+
+  function clearAllFilters() {
+    setSelectedHostelId("");
+    setSelectedBlockId("");
+    setSelectedRoomId("");
+    setSelectedStatus("");
+    setSearch("");
+    setSearchActive(false);
+
+    loadData("");
+  }
+
+  const locationFilterActive =
+    Boolean(
+      selectedHostelId ||
+        selectedBlockId ||
+        selectedRoomId
+    );
+
+  const anyFilterActive =
+    Boolean(
+      selectedHostelId ||
+        selectedBlockId ||
+        selectedRoomId ||
+        selectedStatus ||
+        searchActive
+    );
+
+  /* --------------------------------------------------
+     UI
+  -------------------------------------------------- */
+
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
+
+      {/* HEADER */}
+
       <header className="border-b border-white/10">
+
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
               🏠
             </div>
@@ -418,6 +821,7 @@ export default function FeesPage() {
                 Hostel Management System
               </p>
             </div>
+
           </Link>
 
           <Link
@@ -426,13 +830,19 @@ export default function FeesPage() {
           >
             ← Dashboard
           </Link>
+
         </div>
+
       </header>
 
-      {/* Main */}
+      {/* MAIN */}
+
       <section className="mx-auto max-w-7xl px-6 py-10">
-        {/* Heading */}
+
+        {/* HEADING */}
+
         <div className="mb-8">
+
           <p className="mb-2 text-sm font-medium text-blue-400">
             ADMINISTRATION
           </p>
@@ -445,28 +855,35 @@ export default function FeesPage() {
             Manage student hostel fees and
             payment status.
           </p>
+
         </div>
 
-        {/* Message */}
+        {/* MESSAGE */}
+
         {message && (
           <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 px-5 py-4 text-sm text-blue-300">
             {message}
           </div>
         )}
 
-        {/* Summary */}
-        <div className="mb-8 grid gap-5 sm:grid-cols-3">
+        {/* SUMMARY */}
+
+        <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+
             <p className="text-sm text-slate-400">
               Total Fees
             </p>
 
             <p className="mt-2 text-3xl font-bold">
-              {fees.length}
+              {filteredFees.length}
             </p>
+
           </div>
 
           <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-6">
+
             <p className="text-sm text-slate-400">
               Pending Amount
             </p>
@@ -474,9 +891,23 @@ export default function FeesPage() {
             <p className="mt-2 text-3xl font-bold text-yellow-400">
               ₹{totalPending.toFixed(2)}
             </p>
+
+          </div>
+
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
+
+            <p className="text-sm text-slate-400">
+              Overdue Amount
+            </p>
+
+            <p className="mt-2 text-3xl font-bold text-red-400">
+              ₹{totalOverdue.toFixed(2)}
+            </p>
+
           </div>
 
           <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-6">
+
             <p className="text-sm text-slate-400">
               Paid Amount
             </p>
@@ -484,27 +915,37 @@ export default function FeesPage() {
             <p className="mt-2 text-3xl font-bold text-green-400">
               ₹{totalPaid.toFixed(2)}
             </p>
+
           </div>
+
         </div>
 
-        {/* Create Fee */}
+        {/* CREATE FEE */}
+
         <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+
           <h3 className="mb-6 text-xl font-bold">
             Create New Fee
           </h3>
 
           {students.length === 0 ? (
+
             <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-5 text-sm text-yellow-300">
               No students are available.
               Please create a student first.
             </div>
+
           ) : (
+
             <form
               onSubmit={handleSubmit}
               className="grid gap-5 md:grid-cols-4"
             >
-              {/* Student */}
+
+              {/* STUDENT */}
+
               <div>
+
                 <label className="mb-2 block text-sm text-slate-300">
                   Student *
                 </label>
@@ -519,6 +960,7 @@ export default function FeesPage() {
                   }
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
                 >
+
                   <option value="">
                     Select student
                   </option>
@@ -526,19 +968,29 @@ export default function FeesPage() {
                   {students.map(
                     (student) => (
                       <option
-                        key={student.id}
-                        value={student.id}
+                        key={
+                          student.id
+                        }
+                        value={
+                          student.id
+                        }
                       >
                         {student.name} (
-                        {student.studentId})
+                        {
+                          student.studentId
+                        })
                       </option>
                     )
                   )}
+
                 </select>
+
               </div>
 
-              {/* Amount */}
+              {/* AMOUNT */}
+
               <div>
+
                 <label className="mb-2 block text-sm text-slate-300">
                   Amount *
                 </label>
@@ -557,10 +1009,13 @@ export default function FeesPage() {
                   placeholder="5000"
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
                 />
+
               </div>
 
-              {/* Due Date */}
+              {/* DUE DATE */}
+
               <div>
+
                 <label className="mb-2 block text-sm text-slate-300">
                   Due Date *
                 </label>
@@ -576,10 +1031,13 @@ export default function FeesPage() {
                   }
                   className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
+
               </div>
 
-              {/* Button */}
+              {/* BUTTON */}
+
               <div className="flex items-end">
+
                 <button
                   type="submit"
                   disabled={saving}
@@ -589,50 +1047,446 @@ export default function FeesPage() {
                     ? "Creating..."
                     : "Create Fee"}
                 </button>
+
               </div>
+
             </form>
+
           )}
+
         </div>
 
-        {/* Fees Table */}
+        {/* SEARCH AND FILTERS */}
+
+        <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+
+          <div className="mb-5">
+
+            <h3 className="text-xl font-bold">
+              🔎 Search & Filter Fee Records
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-400">
+              Use the dropdowns directly or
+              search by student details.
+              No search box is required for
+              dropdown filtering.
+            </p>
+
+          </div>
+
+          {/* DROPDOWNS */}
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+            {/* HOSTEL */}
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Hostel
+              </label>
+
+              <select
+                value={
+                  selectedHostelId
+                }
+                onChange={(e) =>
+                  handleHostelChange(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500"
+              >
+
+                <option value="">
+                  All Hostels
+                </option>
+
+                {hostels.map(
+                  (hostel) => (
+                    <option
+                      key={
+                        hostel.id
+                      }
+                      value={
+                        hostel.id
+                      }
+                    >
+                      {hostel.name}
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* BLOCK */}
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Block
+              </label>
+
+              <select
+                value={
+                  selectedBlockId
+                }
+                onChange={(e) =>
+                  handleBlockChange(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  !selectedHostelId
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+
+                <option value="">
+                  {selectedHostelId
+                    ? "All Blocks"
+                    : "Select hostel first"}
+                </option>
+
+                {selectedHostel?.blocks?.map(
+                  (block) => (
+                    <option
+                      key={
+                        block.id
+                      }
+                      value={
+                        block.id
+                      }
+                    >
+                      {block.name}
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* ROOM */}
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Room
+              </label>
+
+              <select
+                value={
+                  selectedRoomId
+                }
+                onChange={(e) =>
+                  handleRoomChange(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  !selectedBlockId
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+
+                <option value="">
+                  {selectedBlockId
+                    ? "All Rooms"
+                    : "Select block first"}
+                </option>
+
+                {availableRooms.map(
+                  (room) => (
+                    <option
+                      key={
+                        room.id
+                      }
+                      value={
+                        room.id
+                      }
+                    >
+                      Room{" "}
+                      {
+                        room.roomNumber
+                      }
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* STATUS */}
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Fee Status
+              </label>
+
+              <select
+                value={
+                  selectedStatus
+                }
+                onChange={(e) =>
+                  handleStatusChange(
+                    e.target.value as
+                      | ""
+                      | FeeStatus
+                  )
+                }
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500"
+              >
+
+                <option value="">
+                  All Status
+                </option>
+
+                <option value="PENDING">
+                  Pending
+                </option>
+
+                <option value="OVERDUE">
+                  Overdue
+                </option>
+
+                <option value="PAID">
+                  Paid
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+          {/* TEXT SEARCH */}
+
+          <form
+            onSubmit={
+              handleFeeSearch
+            }
+            className="mt-5 flex flex-col gap-3 md:flex-row"
+          >
+
+            <div className="relative flex-1">
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                placeholder="Search student, ID, email, department, hostel, block, room..."
+                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 pr-12 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+              />
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={
+                    clearFeeSearch
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-white"
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+
+            </div>
+
+            <button
+              type="submit"
+              disabled={searching}
+              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {searching
+                ? "Searching..."
+                : "Search"}
+            </button>
+
+          </form>
+
+          {/* FILTER BUTTONS */}
+
+          {anyFilterActive && (
+
+            <div className="mt-5 flex flex-wrap gap-3">
+
+              <button
+                type="button"
+                onClick={
+                  clearAllFilters
+                }
+                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/20"
+              >
+                Clear All Filters
+              </button>
+
+              {locationFilterActive && (
+
+                <button
+                  type="button"
+                  onClick={
+                    clearLocationFilters
+                  }
+                  className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10"
+                >
+                  Clear Location
+                </button>
+
+              )}
+
+              {selectedStatus && (
+
+                <span className="rounded-full bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-400">
+                  Status:{" "}
+                  {
+                    selectedStatus
+                  }
+                </span>
+
+              )}
+
+            </div>
+
+          )}
+
+          {/* ACTIVE FILTER INFO */}
+
+          {locationFilterActive && (
+
+            <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
+
+              Showing:
+
+              {" "}
+
+              <span className="font-semibold">
+                {selectedHostel?.name ||
+                  "All Hostels"}
+              </span>
+
+              {selectedBlock && (
+                <>
+                  {" → "}
+                  <span className="font-semibold">
+                    {
+                      selectedBlock.name
+                    }
+                  </span>
+                </>
+              )}
+
+              {selectedRoomId && (
+                <>
+                  {" → Room "}
+                  <span className="font-semibold">
+                    {
+                      availableRooms.find(
+                        (room) =>
+                          String(
+                            room.id
+                          ) ===
+                          selectedRoomId
+                      )?.roomNumber
+                    }
+                  </span>
+                </>
+              )}
+
+            </div>
+
+          )}
+
+          {searchActive && (
+
+            <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm text-blue-300">
+
+              Showing search results
+              for{" "}
+
+              <span className="font-semibold">
+                "{search}"
+              </span>
+
+              . Historical paid
+              records are included
+              in search results.
+
+            </div>
+
+          )}
+
+        </div>
+
+        {/* FEE TABLE */}
+
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+
           <div className="border-b border-white/10 px-6 py-5">
+
             <h3 className="font-bold">
               Fee Records
             </h3>
 
             <p className="mt-1 text-sm text-slate-400">
-              {fees.length} fee record
-              {fees.length !== 1
+              {filteredFees.length} fee record
+              {filteredFees.length !==
+              1
                 ? "s"
                 : ""}
             </p>
+
           </div>
 
           {loading ? (
+
             <div className="px-6 py-12 text-center text-slate-400">
               Loading fees...
             </div>
-          ) : fees.length === 0 ? (
+
+          ) : filteredFees.length ===
+            0 ? (
+
             <div className="px-6 py-12 text-center">
+
               <div className="mb-4 text-5xl">
                 💰
               </div>
 
               <h4 className="font-semibold">
-                No fees yet
+                {anyFilterActive
+                  ? "No matching fee records"
+                  : "No fees yet"}
               </h4>
 
               <p className="mt-2 text-sm text-slate-400">
-                Create the first fee using
-                the form above.
+                {anyFilterActive
+                  ? "Try another search or filter."
+                  : "Create the first fee using the form above."}
               </p>
+
             </div>
+
           ) : (
+
             <div className="overflow-x-auto">
+
               <table className="w-full text-left">
+
                 <thead className="border-b border-white/10 bg-white/[0.02]">
+
                   <tr>
+
                     <th className="px-6 py-4 text-sm">
                       Student
                     </th>
@@ -646,232 +1500,375 @@ export default function FeesPage() {
                     </th>
 
                     <th className="px-6 py-4 text-sm">
+                      Paid Date
+                    </th>
+
+                    <th className="px-6 py-4 text-sm">
                       Status
                     </th>
 
                     <th className="px-6 py-4 text-sm">
                       Actions
                     </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
-                  {fees.map((fee) => (
-                    <tr
-                      key={fee.id}
-                      className="border-b border-white/5 last:border-0"
-                    >
-                      <td className="px-6 py-4">
-                        <p className="font-medium">
-                          {fee.student.name}
-                        </p>
 
-                        <p className="text-sm text-slate-500">
-                          {
-                            fee.student
-                              .studentId
-                          }
-                        </p>
-                      </td>
+                  {filteredFees.map(
+                    (fee) => (
 
-                      {editingFeeId ===
-                      fee.id ? (
-                        <>
-                          {/* Edit Amount */}
-                          <td className="px-6 py-4">
-                            <input
-                              type="number"
-                              min="1"
-                              step="0.01"
-                              value={
-                                editAmount
+                      <tr
+                        key={
+                          fee.id
+                        }
+                        className="border-b border-white/5 last:border-0"
+                      >
+
+                        {/* STUDENT */}
+
+                        <td className="px-6 py-4">
+
+                          <p className="font-medium">
+                            {
+                              fee
+                                .student
+                                .name
+                            }
+                          </p>
+
+                          <p className="text-sm text-slate-500">
+                            {
+                              fee
+                                .student
+                                .studentId
+                            }
+                          </p>
+
+                          {fee.student
+                            .department && (
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              {
+                                fee
+                                  .student
+                                  .department
                               }
-                              onChange={(e) =>
-                                setEditAmount(
-                                  e.target.value
-                                )
-                              }
-                              className="w-32 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
-                            />
-                          </td>
+                            </p>
 
-                          {/* Edit Date */}
-                          <td className="px-6 py-4">
-                            <input
-                              type="date"
-                              value={
-                                editDueDate
-                              }
-                              onChange={(e) =>
-                                setEditDueDate(
-                                  e.target.value
-                                )
-                              }
-                              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none focus:border-blue-500"
-                            />
-                          </td>
+                          )}
 
-                          {/* Edit Status */}
-                          <td className="px-6 py-4">
-                            <select
-                              value={
-                                editStatus
-                              }
-                              onChange={(e) =>
-                                setEditStatus(
-                                  e.target
-                                    .value as
-                                    | "PENDING"
-                                    | "PAID"
-                                    | "OVERDUE"
-                                )
-                              }
-                              className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
-                            >
-                              <option value="PENDING">
-                                Pending
-                              </option>
+                          <p className="mt-1 text-xs text-slate-500">
 
-                              <option value="PAID">
-                                Paid
-                              </option>
+                            {fee
+                              .student
+                              .hostel
+                              ?.name ||
+                              "No hostel"}
 
-                              <option value="OVERDUE">
-                                Overdue
-                              </option>
-                            </select>
-                          </td>
+                            {" • "}
 
-                          {/* Edit Actions */}
-                          <td className="px-6 py-4">
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                disabled={
-                                  saving
+                            {fee
+                              .student
+                              .block
+                              ?.name ||
+                              "No block"}
+
+                            {" • Room "}
+
+                            {fee
+                              .student
+                              .room
+                              ?.roomNumber ||
+                              "—"}
+
+                          </p>
+
+                        </td>
+
+                        {editingFeeId ===
+                        fee.id ? (
+
+                          <>
+
+                            {/* EDIT AMOUNT */}
+
+                            <td className="px-6 py-4">
+
+                              <input
+                                type="number"
+                                min="1"
+                                step="0.01"
+                                value={
+                                  editAmount
                                 }
-                                onClick={() =>
-                                  saveEditedFee(
-                                    fee.id
+                                onChange={(
+                                  e
+                                ) =>
+                                  setEditAmount(
+                                    e
+                                      .target
+                                      .value
                                   )
                                 }
-                                className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold hover:bg-green-500 disabled:opacity-50"
-                              >
-                                Save
-                              </button>
+                                className="w-32 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
+                              />
 
-                              <button
-                                disabled={
-                                  saving
+                            </td>
+
+                            {/* EDIT DATE */}
+
+                            <td className="px-6 py-4">
+
+                              <input
+                                type="date"
+                                value={
+                                  editDueDate
                                 }
-                                onClick={
-                                  cancelEditing
-                                }
-                                className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 disabled:opacity-50"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          {/* Amount */}
-                          <td className="px-6 py-4 font-semibold">
-                            ₹
-                            {Number(
-                              fee.amount
-                            ).toFixed(2)}
-                          </td>
-
-                          {/* Due Date */}
-                          <td className="px-6 py-4 text-sm text-slate-400">
-                            {new Date(
-                              fee.dueDate
-                            ).toLocaleDateString()}
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-6 py-4">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                fee.status ===
-                                "PAID"
-                                  ? "bg-green-500/10 text-green-400"
-                                  : fee.status ===
-                                      "OVERDUE"
-                                    ? "bg-red-500/10 text-red-400"
-                                    : "bg-yellow-500/10 text-yellow-400"
-                              }`}
-                            >
-                              {fee.status}
-                            </span>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="px-6 py-4">
-                            <div className="flex flex-wrap gap-3">
-                              <button
-                                onClick={() =>
-                                  startEditing(
-                                    fee
+                                onChange={(
+                                  e
+                                ) =>
+                                  setEditDueDate(
+                                    e
+                                      .target
+                                      .value
                                   )
                                 }
-                                className="text-sm text-blue-400 hover:text-blue-300"
-                              >
-                                Edit
-                              </button>
+                                className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none focus:border-blue-500"
+                              />
 
-                              {fee.status ===
-                              "PAID" ? (
+                            </td>
+
+                            {/* PAID DATE */}
+
+                            <td className="px-6 py-4 text-sm text-slate-500">
+
+                              {fee.paidDate
+                                ? new Date(
+                                    fee.paidDate
+                                  ).toLocaleString()
+                                : "—"}
+
+                            </td>
+
+                            {/* EDIT STATUS */}
+
+                            <td className="px-6 py-4">
+
+                              <select
+                                value={
+                                  editStatus
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setEditStatus(
+                                    e
+                                      .target
+                                      .value as FeeStatus
+                                  )
+                                }
+                                className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
+                              >
+
+                                <option value="PENDING">
+                                  Pending
+                                </option>
+
+                                <option value="PAID">
+                                  Paid
+                                </option>
+
+                                <option value="OVERDUE">
+                                  Overdue
+                                </option>
+
+                              </select>
+
+                            </td>
+
+                            {/* EDIT ACTIONS */}
+
+                            <td className="px-6 py-4">
+
+                              <div className="flex flex-wrap gap-2">
+
                                 <button
+                                  disabled={
+                                    saving
+                                  }
                                   onClick={() =>
-                                    updateFeeStatus(
-                                      fee.id,
-                                      "PENDING"
+                                    saveEditedFee(
+                                      fee.id
                                     )
                                   }
-                                  className="text-sm text-yellow-400 hover:text-yellow-300"
+                                  className="rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold hover:bg-green-500 disabled:opacity-50"
                                 >
-                                  Mark Pending
+                                  Save
                                 </button>
-                              ) : (
+
                                 <button
-                                  onClick={() =>
-                                    updateFeeStatus(
-                                      fee.id,
-                                      "PAID"
-                                    )
+                                  disabled={
+                                    saving
                                   }
-                                  className="text-sm text-green-400 hover:text-green-300"
+                                  onClick={
+                                    cancelEditing
+                                  }
+                                  className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 disabled:opacity-50"
                                 >
-                                  Mark Paid
+                                  Cancel
                                 </button>
+
+                              </div>
+
+                            </td>
+
+                          </>
+
+                        ) : (
+
+                          <>
+
+                            {/* AMOUNT */}
+
+                            <td className="px-6 py-4 font-semibold">
+                              ₹
+                              {Number(
+                                fee.amount
+                              ).toFixed(
+                                2
                               )}
+                            </td>
 
-                              <button
-                                onClick={() =>
-                                  deleteFee(
-                                    fee.id,
-                                    fee.student
-                                      .name
-                                  )
-                                }
-                                className="text-sm text-red-400 hover:text-red-300"
+                            {/* DUE DATE */}
+
+                            <td className="px-6 py-4 text-sm text-slate-400">
+                              {new Date(
+                                fee.dueDate
+                              ).toLocaleDateString()}
+                            </td>
+
+                            {/* PAID DATE */}
+
+                            <td className="px-6 py-4 text-sm text-slate-400">
+                              {fee.paidDate
+                                ? new Date(
+                                    fee.paidDate
+                                  ).toLocaleString()
+                                : "—"}
+                            </td>
+
+                            {/* STATUS */}
+
+                            <td className="px-6 py-4">
+
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  fee.status ===
+                                  "PAID"
+                                    ? "bg-green-500/10 text-green-400"
+                                    : fee.status ===
+                                        "OVERDUE"
+                                      ? "bg-red-500/10 text-red-400"
+                                      : "bg-yellow-500/10 text-yellow-400"
+                                }`}
                               >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  ))}
+                                {
+                                  fee.status
+                                }
+                              </span>
+
+                            </td>
+
+                            {/* ACTIONS */}
+
+                            <td className="px-6 py-4">
+
+                              <div className="flex flex-wrap gap-3">
+
+                                <button
+                                  onClick={() =>
+                                    startEditing(
+                                      fee
+                                    )
+                                  }
+                                  className="text-sm text-blue-400 hover:text-blue-300"
+                                >
+                                  Edit
+                                </button>
+
+                                {fee.status ===
+                                "PAID" ? (
+
+                                  <button
+                                    onClick={() =>
+                                      updateFeeStatus(
+                                        fee.id,
+                                        "PENDING"
+                                      )
+                                    }
+                                    className="text-sm text-yellow-400 hover:text-yellow-300"
+                                  >
+                                    Mark Pending
+                                  </button>
+
+                                ) : (
+
+                                  <button
+                                    onClick={() =>
+                                      updateFeeStatus(
+                                        fee.id,
+                                        "PAID"
+                                      )
+                                    }
+                                    className="text-sm text-green-400 hover:text-green-300"
+                                  >
+                                    Mark Paid
+                                  </button>
+
+                                )}
+
+                                <button
+                                  onClick={() =>
+                                    deleteFee(
+                                      fee.id,
+                                      fee
+                                        .student
+                                        .name
+                                    )
+                                  }
+                                  className="text-sm text-red-400 hover:text-red-300"
+                                >
+                                  Delete
+                                </button>
+
+                              </div>
+
+                            </td>
+
+                          </>
+
+                        )}
+
+                      </tr>
+
+                    )
+                  )}
+
                 </tbody>
+
               </table>
+
             </div>
+
           )}
+
         </div>
+
       </section>
+
     </main>
   );
 }

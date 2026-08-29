@@ -46,3 +46,6 @@ next-env.d.ts
 .agents/
 .claude/
 .windsurf/
+
+# Local database backups
+hostel_management_backup.sql

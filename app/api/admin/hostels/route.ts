@@ -1,7 +1,8 @@
-
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   const user = await requireAdmin();
@@ -81,6 +82,17 @@ export async function POST(request: Request) {
         },
       });
 
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "CREATE",
+        entity: "HOSTEL",
+        entityId: newHostel.id,
+        description: `Created hostel "${newHostel.name}" with block "${block}".`,
+        db: tx,
+      });
+
       return newHostel;
     });
 
@@ -149,14 +161,31 @@ export async function PUT(request: Request) {
       );
     }
 
-    const updatedHostel = await prisma.hostel.update({
-      where: {
-        id: hostelId,
-      },
-      data: {
-        name,
-      },
-    });
+    const updatedHostel = await prisma.$transaction(
+      async (tx) => {
+        const updated = await tx.hostel.update({
+          where: {
+            id: hostelId,
+          },
+          data: {
+            name,
+          },
+        });
+
+        await createAuditLog({
+          actorId: user.id,
+          actorName: user.name,
+          actorEmail: user.email,
+          action: "UPDATE",
+          entity: "HOSTEL",
+          entityId: updated.id,
+          description: `Updated hostel "${hostel.name}" to "${updated.name}".`,
+          db: tx,
+        });
+
+        return updated;
+      }
+    );
 
     return NextResponse.json(updatedHostel);
   } catch (error: any) {
@@ -230,6 +259,17 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "DELETE",
+        entity: "HOSTEL",
+        entityId: hostel.id,
+        description: `Deleted hostel "${hostel.name}".`,
+        db: tx,
+      });
+
       await tx.block.deleteMany({
         where: {
           hostelId: hostelId,

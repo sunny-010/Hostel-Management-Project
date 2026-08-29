@@ -12,7 +12,31 @@ export async function POST(request: Request) {
     if (!email || !password || !role) {
       return NextResponse.json(
         {
-          message: "Email, password and role are required",
+          message:
+            "Email, password and role are required",
+        },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = String(email)
+      .trim()
+      .toLowerCase();
+
+    const normalizedRole = String(role)
+      .trim()
+      .toUpperCase();
+
+    const allowedRoles = [
+      "SUPER_ADMIN",
+      "ADMIN",
+      "STUDENT",
+    ];
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      return NextResponse.json(
+        {
+          message: "Invalid login role",
         },
         { status: 400 }
       );
@@ -20,7 +44,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: {
-        email: String(email).trim().toLowerCase(),
+        email: normalizedEmail,
       },
     });
 
@@ -47,12 +71,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (user.role !== role) {
+    /*
+     * Deactivated accounts cannot log in.
+     *
+     * This is especially important for ADMIN accounts
+     * because SuperAdmin can deactivate them.
+     */
+    if (user.status === "DEACTIVATED") {
       return NextResponse.json(
         {
-          message: `This account is not registered as ${String(
-            role
-          ).toLowerCase()}`,
+          message:
+            "This account has been deactivated. Please contact the SuperAdmin.",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (user.role !== normalizedRole) {
+      return NextResponse.json(
+        {
+          message: `This account is not registered as ${normalizedRole
+            .toLowerCase()
+            .replace("_", " ")}`,
         },
         { status: 403 }
       );
@@ -65,22 +105,33 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
+        status: user.status,
       },
     });
 
-    response.cookies.set("userId", String(user.id), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
+    response.cookies.set(
+      "userId",
+      String(user.id),
+      {
+        httpOnly: true,
+        secure:
+          process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      }
+    );
 
-    response.cookies.set("role", user.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
+    response.cookies.set(
+      "role",
+      user.role,
+      {
+        httpOnly: true,
+        secure:
+          process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      }
+    );
 
     return response;
   } catch (error) {
@@ -88,7 +139,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Something went wrong during login",
+        message:
+          "Something went wrong during login",
       },
       { status: 500 }
     );

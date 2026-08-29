@@ -10,37 +10,52 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const password = await bcrypt.hash("Admin@123", 10);
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
 
-  const admin = await prisma.user.upsert({
+  if (!superAdminEmail || !superAdminPassword) {
+    throw new Error(
+      "SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD must be set in .env"
+    );
+  }
+
+  const superAdminHashedPassword = await bcrypt.hash(
+    superAdminPassword,
+    10
+  );
+
+  const superAdmin = await prisma.user.upsert({
     where: {
-      email: "admin@hostelhub.com",
+      email: superAdminEmail,
     },
     update: {
-      password,
-      role: "ADMIN",
-      name: "Hostel Administrator",
+      password: superAdminHashedPassword,
+      role: "SUPER_ADMIN",
+      status: "ACTIVE",
+      name: "System Super Administrator",
     },
     create: {
-      name: "Hostel Administrator",
-      email: "admin@hostelhub.com",
-      password,
-      role: "ADMIN",
+      name: "System Super Administrator",
+      email: superAdminEmail,
+      password: superAdminHashedPassword,
+      role: "SUPER_ADMIN",
+      status: "ACTIVE",
     },
   });
 
-  console.log("Admin created successfully:");
+  console.log("SuperAdmin created successfully:");
   console.log({
-    id: admin.id,
-    name: admin.name,
-    email: admin.email,
-    role: admin.role,
+    id: superAdmin.id,
+    name: superAdmin.name,
+    email: superAdmin.email,
+    role: superAdmin.role,
+    status: superAdmin.status,
   });
 }
 
 main()
   .catch((error) => {
-    console.error(error);
+    console.error("Seed error:", error);
     process.exit(1);
   })
   .finally(async () => {

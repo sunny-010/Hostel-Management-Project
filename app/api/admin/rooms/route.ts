@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
 export async function POST(request: Request) {
   const user = await requireAdmin();
@@ -116,14 +118,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const room = await prisma.room.create({
-      data: {
-        hostelId: hostelIdNumber,
-        blockId: blockIdNumber,
-        roomNumber: cleanRoomNumber,
-        capacity: capacityNumber,
-        occupied: 0,
-      },
+    const room = await prisma.$transaction(async (tx) => {
+      const newRoom = await tx.room.create({
+        data: {
+          hostelId: hostelIdNumber,
+          blockId: blockIdNumber,
+          roomNumber: cleanRoomNumber,
+          capacity: capacityNumber,
+          occupied: 0,
+        },
+      });
+
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "CREATE",
+        entity: "ROOM",
+        entityId: newRoom.id,
+        description: `Created room "${newRoom.roomNumber}" in block "${block.name}", hostel "${hostel.name}" with capacity ${newRoom.capacity}.`,
+        db: tx,
+      });
+
+      return newRoom;
     });
 
     return NextResponse.json(room, {

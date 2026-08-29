@@ -1,8 +1,9 @@
-
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   const user = await requireAdmin();
@@ -65,15 +66,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingStudent =
-      await prisma.student.findFirst({
-        where: {
-          OR: [
-            { studentId },
-            { email },
-          ],
-        },
-      });
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { studentId },
+          { email },
+        ],
+      },
+    });
 
     if (existingStudent) {
       return NextResponse.json(
@@ -85,12 +85,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingUser =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
     if (existingUser) {
       return NextResponse.json(
@@ -102,64 +101,64 @@ export async function POST(request: Request) {
       );
     }
 
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const student =
-      await prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({
-          data: {
-            name,
-            email,
-            password: hashedPassword,
-            role: "STUDENT",
-          },
-        });
-
-        return tx.student.create({
-          data: {
-            studentId,
-            name,
-            email,
-            phone: phone || null,
-            department:
-              department || null,
-            year: year
-              ? Number(year)
-              : null,
-            userId: user.id,
-          },
-        });
+    const student = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: "STUDENT",
+        },
       });
+
+      const createdStudent = await tx.student.create({
+        data: {
+          studentId,
+          name,
+          email,
+          phone: phone || null,
+          department: department || null,
+          year: year ? Number(year) : null,
+          userId: createdUser.id,
+        },
+      });
+
+      await createAuditLog({
+        actorId: user.id,
+        actorName: user.name,
+        actorEmail: user.email,
+        action: "CREATE",
+        entity: "STUDENT",
+        entityId: createdStudent.id,
+        description: `Created student "${createdStudent.name}" (${createdStudent.email}).`,
+        db: tx,
+      });
+
+      return createdStudent;
+    });
 
     return NextResponse.json(student, {
       status: 201,
     });
   } catch (error) {
-    console.error(
-      "Create student error:",
-      error
-    );
+    console.error("Create student error:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Failed to create student",
+        message: "Failed to create student",
       },
       { status: 500 }
     );
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| EDIT STUDENT
-|--------------------------------------------------------------------------
-*/
+/* -------------------------------------------------------------------------- */
+/* EDIT STUDENT                                                               */
+/* -------------------------------------------------------------------------- */
 
-export async function PATCH(
-  request: Request
-) {
+export async function PATCH(request: Request) {
   const user = await requireAdmin();
 
   if (!user) {
@@ -191,18 +190,13 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          message:
-            "Valid student ID is required",
+          message: "Valid student ID is required",
         },
         { status: 400 }
       );
     }
 
-    if (
-      !studentId ||
-      !name ||
-      !email
-    ) {
+    if (!studentId || !name || !email) {
       return NextResponse.json(
         {
           message:
@@ -222,17 +216,12 @@ export async function PATCH(
     if (!existingStudent) {
       return NextResponse.json(
         {
-          message:
-            "Student not found",
+          message: "Student not found",
         },
         { status: 404 }
       );
     }
 
-    /*
-     * Check whether another student
-     * already uses the same student ID.
-     */
     const duplicateStudentId =
       await prisma.student.findFirst({
         where: {
@@ -253,10 +242,6 @@ export async function PATCH(
       );
     }
 
-    /*
-     * Check whether another student
-     * already uses the same email.
-     */
     const duplicateStudentEmail =
       await prisma.student.findFirst({
         where: {
@@ -277,10 +262,6 @@ export async function PATCH(
       );
     }
 
-    /*
-     * Check User table as email is also
-     * unique there.
-     */
     const existingUser =
       await prisma.user.findUnique({
         where: {
@@ -304,9 +285,6 @@ export async function PATCH(
     const updatedStudent =
       await prisma.$transaction(
         async (tx) => {
-          /*
-           * Update student record
-           */
           const student =
             await tx.student.update({
               where: {
@@ -329,9 +307,7 @@ export async function PATCH(
 
                 department:
                   department
-                    ? String(
-                        department
-                      ).trim()
+                    ? String(department).trim()
                     : null,
 
                 year:
@@ -343,29 +319,18 @@ export async function PATCH(
               },
             });
 
-          /*
-           * Update login account
-           */
           const userData: {
             name: string;
             email: string;
             password?: string;
           } = {
-            name:
-              String(name).trim(),
-
-            email:
-              String(email).trim(),
+            name: String(name).trim(),
+            email: String(email).trim(),
           };
 
-          /*
-           * Only change password if
-           * admin entered a new password.
-           */
           if (
             password &&
-            String(password).trim()
-              .length > 0
+            String(password).trim().length > 0
           ) {
             userData.password =
               await bcrypt.hash(
@@ -381,38 +346,39 @@ export async function PATCH(
             data: userData,
           });
 
+          await createAuditLog({
+            actorId: user.id,
+            actorName: user.name,
+            actorEmail: user.email,
+            action: "UPDATE",
+            entity: "STUDENT",
+            entityId: student.id,
+            description: `Updated student "${student.name}" (${student.email}).`,
+            db: tx,
+          });
+
           return student;
         }
       );
 
-    return NextResponse.json(
-      updatedStudent
-    );
+    return NextResponse.json(updatedStudent);
   } catch (error) {
-    console.error(
-      "Update student error:",
-      error
-    );
+    console.error("Update student error:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Failed to update student",
+        message: "Failed to update student",
       },
       { status: 500 }
     );
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| DELETE STUDENT
-|--------------------------------------------------------------------------
-*/
+/* -------------------------------------------------------------------------- */
+/* DELETE STUDENT                                                             */
+/* -------------------------------------------------------------------------- */
 
-export async function DELETE(
-  request: Request
-) {
+export async function DELETE(request: Request) {
   const user = await requireAdmin();
 
   if (!user) {
@@ -425,9 +391,7 @@ export async function DELETE(
   try {
     const body = await request.json();
 
-    const studentId = Number(
-      body.id
-    );
+    const studentId = Number(body.id);
 
     if (
       !Number.isInteger(studentId) ||
@@ -435,8 +399,7 @@ export async function DELETE(
     ) {
       return NextResponse.json(
         {
-          message:
-            "Valid student ID is required",
+          message: "Valid student ID is required",
         },
         { status: 400 }
       );
@@ -455,8 +418,7 @@ export async function DELETE(
     if (!student) {
       return NextResponse.json(
         {
-          message:
-            "Student not found",
+          message: "Student not found",
         },
         { status: 404 }
       );
@@ -464,10 +426,21 @@ export async function DELETE(
 
     await prisma.$transaction(
       async (tx) => {
-        /*
-         * Decrease occupied count
-         * for allocated rooms.
-         */
+        /* Create audit record BEFORE deleting the student. */
+
+        await createAuditLog({
+          actorId: user.id,
+          actorName: user.name,
+          actorEmail: user.email,
+          action: "DELETE",
+          entity: "STUDENT",
+          entityId: student.id,
+          description: `Deleted student "${student.name}" (${student.email}).`,
+          db: tx,
+        });
+
+        /* Decrease occupied count for allocated rooms. */
+
         for (const allocation of student.allocations) {
           await tx.room.update({
             where: {
@@ -481,54 +454,48 @@ export async function DELETE(
           });
         }
 
-        /*
-         * Delete room allocations
-         */
+        /* Delete room allocations */
+
         await tx.roomAllocation.deleteMany({
           where: {
             studentId: student.id,
           },
         });
 
-        /*
-         * Delete fees
-         */
+        /* Delete fees */
+
         await tx.fee.deleteMany({
           where: {
             studentId: student.id,
           },
         });
 
-        /*
-         * Delete complaints
-         */
+        /* Delete complaints */
+
         await tx.complaint.deleteMany({
           where: {
             studentId: student.id,
           },
         });
 
-        /*
-         * Delete leave applications
-         */
+        /* Delete leave applications */
+
         await tx.leaveApplication.deleteMany({
           where: {
             studentId: student.id,
           },
         });
 
-        /*
-         * Delete student
-         */
+        /* Delete student */
+
         await tx.student.delete({
           where: {
             id: student.id,
           },
         });
 
-        /*
-         * Delete login account
-         */
+        /* Delete login account */
+
         await tx.user.delete({
           where: {
             id: student.userId,
@@ -538,19 +505,14 @@ export async function DELETE(
     );
 
     return NextResponse.json({
-      message:
-        "Student deleted successfully",
+      message: "Student deleted successfully",
     });
   } catch (error) {
-    console.error(
-      "Delete student error:",
-      error
-    );
+    console.error("Delete student error:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Failed to delete student",
+        message: "Failed to delete student",
       },
       { status: 500 }
     );
