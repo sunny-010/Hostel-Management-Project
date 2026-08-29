@@ -52,7 +52,10 @@ export default function SuperAdminSettingsPage() {
       setError("");
 
       const response = await fetch(
-        "/api/superadmin/settings"
+        "/api/superadmin/settings",
+        {
+          credentials: "include",
+        }
       );
 
       const data = await response.json();
@@ -87,7 +90,9 @@ export default function SuperAdminSettingsPage() {
 
   async function loadProfile() {
     try {
-      const response = await fetch("/api/profile");
+      const response = await fetch("/api/profile", {
+        credentials: "include",
+      });
 
       const data = await response.json();
 
@@ -153,6 +158,7 @@ export default function SuperAdminSettingsPage() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
             systemName,
             institutionName,
@@ -194,6 +200,10 @@ export default function SuperAdminSettingsPage() {
     }
   }
 
+  // --------------------------------------------------
+  // Logout
+  // --------------------------------------------------
+
   async function handleLogout() {
     if (loggingOut) return;
 
@@ -221,7 +231,6 @@ export default function SuperAdminSettingsPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-slate-950/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-
           {/* Logo */}
           <Link
             href="/superadmin/dashboard"
@@ -244,7 +253,6 @@ export default function SuperAdminSettingsPage() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-
             {/* SuperAdmin Profile */}
             <Link
               href="/profile"
@@ -257,7 +265,8 @@ export default function SuperAdminSettingsPage() {
                 <p className="text-sm font-semibold">
                   {loading
                     ? "Loading..."
-                    : profile?.name || "Super Administrator"}
+                    : profile?.name ||
+                      "Super Administrator"}
                 </p>
 
                 <p className="text-xs text-blue-400">
@@ -282,26 +291,30 @@ export default function SuperAdminSettingsPage() {
             </Link>
 
             {/* Logout */}
-            <form
-              action="/api/logout"
-              method="POST"
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
+              aria-label={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <button
-                type="submit"
-                title="Logout"
-                aria-label="Logout"
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white"
-              >
-                ⏻
-              </button>
-            </form>
+              {loggingOut ? "⏳" : "⏻"}
+            </button>
           </div>
         </div>
       </header>
 
       {/* Content */}
       <section className="mx-auto max-w-5xl px-6 py-10">
-
         {/* Back */}
         <Link
           href="/superadmin/dashboard"
@@ -363,7 +376,6 @@ export default function SuperAdminSettingsPage() {
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
-
                 {/* System Name */}
                 <div>
                   <label className="mb-2 block text-sm font-medium">
@@ -451,7 +463,6 @@ export default function SuperAdminSettingsPage() {
               </div>
 
               <div className="space-y-5">
-
                 {/* Maintenance Mode */}
                 <div className="flex items-center justify-between gap-5 rounded-xl border border-white/10 bg-slate-900/50 p-5">
                   <div>

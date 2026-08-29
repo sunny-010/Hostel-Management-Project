@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -35,8 +34,6 @@ export default function SuperAdminDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
-  
-
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -45,7 +42,9 @@ export default function SuperAdminDashboard() {
         const [response, profileResponse] =
           await Promise.all([
             fetch("/api/superadmin/dashboard"),
-            fetch("/api/profile"),
+            fetch("/api/profile", {
+              credentials: "include",
+            }),
           ]);
 
         const data = await response.json();
@@ -58,9 +57,7 @@ export default function SuperAdminDashboard() {
         }
 
         if (!profileResponse.ok) {
-          throw new Error(
-            "Failed to load profile"
-          );
+          throw new Error("Failed to load profile");
         }
 
         const profileData =
@@ -110,7 +107,6 @@ export default function SuperAdminDashboard() {
     },
   ];
 
-
   // --------------------------------------------------
   // Logout
   // --------------------------------------------------
@@ -123,13 +119,14 @@ export default function SuperAdminDashboard() {
     try {
       const response = await fetch("/api/logout", {
         method: "POST",
+        credentials: "include",
       });
 
       if (!response.ok) {
         throw new Error("Logout failed");
       }
 
-      window.location.href = "/login";
+      window.location.replace("/login");
     } catch (error) {
       console.error("Logout error:", error);
       setLoggingOut(false);
@@ -139,12 +136,9 @@ export default function SuperAdminDashboard() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
-
       <header className="border-b border-white/10 bg-slate-950/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-
           {/* Logo */}
-
           <Link
             href="/"
             className="flex items-center gap-3"
@@ -165,11 +159,8 @@ export default function SuperAdminDashboard() {
           </Link>
 
           {/* Right Side */}
-
           <div className="flex items-center gap-4">
-
             {/* SuperAdmin Profile */}
-
             <Link
               href="/profile"
               className="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/5"
@@ -177,7 +168,6 @@ export default function SuperAdminDashboard() {
               aria-label="My Profile"
             >
               {/* Name + Role */}
-
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold">
                   {profile?.name ||
@@ -190,7 +180,6 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Avatar */}
-
               <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold">
                 {profile?.profileImage ? (
                   <img
@@ -207,13 +196,20 @@ export default function SuperAdminDashboard() {
             </Link>
 
             {/* Logout */}
-
             <button
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              title={loggingOut ? "Logging out..." : "Logout"}
-              aria-label={loggingOut ? "Logging out..." : "Logout"}
+              title={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
+              aria-label={
+                loggingOut
+                  ? "Logging out..."
+                  : "Logout"
+              }
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loggingOut ? "⏳" : "⏻"}
@@ -223,11 +219,8 @@ export default function SuperAdminDashboard() {
       </header>
 
       {/* Dashboard */}
-
       <section className="mx-auto max-w-7xl px-6 py-10">
-
         {/* Heading */}
-
         <div className="mb-10">
           <p className="mb-2 text-sm font-medium text-blue-400">
             SYSTEM ADMINISTRATION
@@ -244,7 +237,6 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* Error */}
-
         {error && (
           <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-300">
             {error}
@@ -252,7 +244,6 @@ export default function SuperAdminDashboard() {
         )}
 
         {/* Statistics */}
-
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
             <div
@@ -268,16 +259,13 @@ export default function SuperAdminDashboard() {
               </p>
 
               <p className="mt-1 text-3xl font-bold">
-                {loading
-                  ? "..."
-                  : stat.value}
+                {loading ? "..." : stat.value}
               </p>
             </div>
           ))}
         </div>
 
         {/* System Status */}
-
         <div className="mt-10">
           <div className="mb-5 flex items-center justify-between">
             <div>
@@ -299,9 +287,7 @@ export default function SuperAdminDashboard() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-
             {/* Maintenance Status */}
-
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -349,7 +335,6 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Admin Creation Status */}
-
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -399,16 +384,13 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* Management */}
-
         <div className="mt-10">
           <h3 className="mb-5 text-xl font-bold">
             SuperAdmin Management
           </h3>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
             {/* Admin Management */}
-
             <Link
               href="/superadmin/admins"
               className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-1 hover:border-blue-500/40 hover:bg-white/[0.05]"
@@ -432,7 +414,6 @@ export default function SuperAdminDashboard() {
             </Link>
 
             {/* System Audit */}
-
             <Link
               href="/superadmin/audit"
               className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-1 hover:border-blue-500/40 hover:bg-white/[0.05]"
@@ -456,7 +437,6 @@ export default function SuperAdminDashboard() {
             </Link>
 
             {/* System Settings */}
-
             <Link
               href="/superadmin/settings"
               className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-1 hover:border-blue-500/40 hover:bg-white/[0.05]"
@@ -483,4 +463,3 @@ export default function SuperAdminDashboard() {
     </main>
   );
 }
-
