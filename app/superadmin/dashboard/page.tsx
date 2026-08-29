@@ -34,6 +34,8 @@ export default function SuperAdminDashboard() {
     useState<SuperAdminProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  
 
   const [error, setError] = useState("");
 
@@ -108,6 +110,32 @@ export default function SuperAdminDashboard() {
     },
   ];
 
+
+  // --------------------------------------------------
+  // Logout
+  // --------------------------------------------------
+
+  async function handleLogout() {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+
+    try {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+      setLoggingOut(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
@@ -180,19 +208,16 @@ export default function SuperAdminDashboard() {
 
             {/* Logout */}
 
-            <form
-              action="/api/logout"
-              method="POST"
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title={loggingOut ? "Logging out..." : "Logout"}
+              aria-label={loggingOut ? "Logging out..." : "Logout"}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <button
-                type="submit"
-                title="Logout"
-                aria-label="Logout"
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white"
-              >
-                ⏻
-              </button>
-            </form>
+              {loggingOut ? "⏳" : "⏻"}
+            </button>
           </div>
         </div>
       </header>

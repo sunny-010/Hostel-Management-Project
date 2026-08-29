@@ -43,6 +43,7 @@ export default function SuperAdminSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -190,6 +191,28 @@ export default function SuperAdminSettingsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleLogout() {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+
+    try {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      window.location.replace("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      setLoggingOut(false);
     }
   }
 
