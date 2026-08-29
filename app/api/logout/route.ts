@@ -2,8 +2,20 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+
+    const host =
+      forwardedHost ||
+      request.headers.get("host") ||
+      new URL(request.url).host;
+
+    const protocol =
+      forwardedProto ||
+      (process.env.NODE_ENV === "production" ? "https" : "http");
+
     const response = NextResponse.redirect(
-      new URL("/login", request.url)
+      new URL("/login", `${protocol}://${host}`)
     );
 
     response.cookies.set("userId", "", {
