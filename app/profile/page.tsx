@@ -50,23 +50,17 @@ export default function ProfilePage() {
     useState(false);
 
   const [error, setError] = useState("");
-
   const [profileError, setProfileError] =
     useState("");
-
   const [profileSuccess, setProfileSuccess] =
     useState("");
-
   const [passwordError, setPasswordError] =
     useState("");
-
   const [passwordSuccess, setPasswordSuccess] =
     useState("");
 
   const [name, setName] = useState("");
-
   const [email, setEmail] = useState("");
-
   const [phone, setPhone] = useState("");
 
   const [profileImage, setProfileImage] =
@@ -85,10 +79,10 @@ export default function ProfilePage() {
     user?.role === "SUPER_ADMIN";
 
   /*
-  |--------------------------------------------------------------------------
-  | Load Profile
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Load Profile
+   * --------------------------------------------------------------------------
+   */
 
   useEffect(() => {
     async function loadProfile() {
@@ -96,13 +90,14 @@ export default function ProfilePage() {
         setLoading(true);
         setError("");
 
-        const response =
-          await fetch("/api/profile", {
+        const response = await fetch(
+          "/api/profile",
+          {
             credentials: "include",
-          });
+          }
+        );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
           throw new Error(
@@ -112,26 +107,14 @@ export default function ProfilePage() {
         }
 
         setUser(data.user);
+        setStudent(data.student || null);
 
-        setStudent(
-          data.student || null
-        );
-
-        setName(
-          data.user.name || ""
-        );
-
-        setEmail(
-          data.user.email || ""
-        );
-
-        setPhone(
-          data.user.phone || ""
-        );
+        setName(data.user.name || "");
+        setEmail(data.user.email || "");
+        setPhone(data.user.phone || "");
 
         setProfileImage(
-          data.user.profileImage ||
-            null
+          data.user.profileImage || null
         );
       } catch (error) {
         console.error(
@@ -153,10 +136,10 @@ export default function ProfilePage() {
   }, []);
 
   /*
-  |--------------------------------------------------------------------------
-  | Logout
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Logout
+   * --------------------------------------------------------------------------
+   */
 
   async function handleLogout() {
     if (loggingOut) {
@@ -166,20 +149,19 @@ export default function ProfilePage() {
     setLoggingOut(true);
 
     try {
-      const response =
-        await fetch("/api/logout", {
+      const response = await fetch(
+        "/api/logout",
+        {
           method: "POST",
           credentials: "include",
-        });
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(
-          "Logout failed"
-        );
+        throw new Error("Logout failed");
       }
 
-      window.location.href =
-        "/login";
+      window.location.href = "/login";
     } catch (error) {
       console.error(
         "Logout error:",
@@ -195,10 +177,10 @@ export default function ProfilePage() {
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Profile Image
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Profile Image
+   * --------------------------------------------------------------------------
+   */
 
   function handleImageChange(
     event: ChangeEvent<HTMLInputElement>
@@ -213,40 +195,29 @@ export default function ProfilePage() {
     setProfileError("");
     setProfileSuccess("");
 
-    if (
-      !file.type.startsWith("image/")
-    ) {
+    if (!file.type.startsWith("image/")) {
       setProfileError(
         "Please select a valid image file."
       );
-
       return;
     }
 
-    if (
-      file.size > 2 * 1024 * 1024
-    ) {
+    if (file.size > 2 * 1024 * 1024) {
       setProfileError(
         "Profile image must be smaller than 2 MB."
       );
-
       return;
     }
 
-    const reader =
-      new FileReader();
+    const reader = new FileReader();
 
     reader.onloadend = () => {
-      const result =
-        reader.result;
+      const result = reader.result;
 
-      if (
-        typeof result !== "string"
-      ) {
+      if (typeof result !== "string") {
         setProfileError(
           "Failed to read the selected image."
         );
-
         return;
       }
 
@@ -257,20 +228,17 @@ export default function ProfilePage() {
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Save Profile
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Save Profile
+   * --------------------------------------------------------------------------
+   */
 
   async function handleSave(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    if (
-      profileLoading ||
-      !user
-    ) {
+    if (profileLoading || !user) {
       return;
     }
 
@@ -279,9 +247,20 @@ export default function ProfilePage() {
     setPasswordError("");
     setPasswordSuccess("");
 
+    /*
+     * Only SuperAdmin can change their name.
+     */
+    const nameChanged =
+      isSuperAdmin &&
+      name.trim() !== user.name.trim();
+
+    /*
+     * Only SuperAdmin can change their email.
+     */
     const emailChanged =
+      isSuperAdmin &&
       email.trim().toLowerCase() !==
-      user.email.toLowerCase();
+        user.email.toLowerCase();
 
     const phoneChanged =
       phone.trim() !==
@@ -292,6 +271,7 @@ export default function ProfilePage() {
       (user.profileImage || null);
 
     const profileChanged =
+      nameChanged ||
       emailChanged ||
       phoneChanged ||
       imageChanged;
@@ -303,42 +283,31 @@ export default function ProfilePage() {
      * Password validation
      */
 
-    if (
-      newPassword ||
-      confirmPassword
-    ) {
+    if (newPassword || confirmPassword) {
       if (!currentPassword) {
         setPasswordError(
           "Enter your current password to change your password."
         );
-
         return;
       }
 
-      if (
-        newPassword.length < 6
-      ) {
+      if (newPassword.length < 6) {
         setPasswordError(
           "New password must be at least 6 characters long."
         );
-
         return;
       }
 
-      if (
-        newPassword !==
-        confirmPassword
-      ) {
+      if (newPassword !== confirmPassword) {
         setPasswordError(
           "New password and confirmation password do not match."
         );
-
         return;
       }
     }
 
     /*
-     * Email change requires current password
+     * Email change requires current password.
      */
 
     if (
@@ -348,7 +317,6 @@ export default function ProfilePage() {
       setProfileError(
         "Enter your current password to change your email."
       );
-
       return;
     }
 
@@ -359,7 +327,6 @@ export default function ProfilePage() {
       setProfileError(
         "No changes were made."
       );
-
       return;
     }
 
@@ -374,17 +341,27 @@ export default function ProfilePage() {
 
       if (profileChanged) {
         const body: {
+          name?: string;
           email?: string;
           phone?: string | null;
           profileImage?: string | null;
           currentPassword?: string;
         } = {};
 
+        /*
+         * Only SuperAdmin sends name changes.
+         */
+        if (nameChanged) {
+          body.name =
+            name.trim();
+        }
+
+        /*
+         * Only SuperAdmin sends email changes.
+         */
         if (emailChanged) {
           body.email =
-            email
-              .trim()
-              .toLowerCase();
+            email.trim().toLowerCase();
         }
 
         if (phoneChanged) {
@@ -399,30 +376,27 @@ export default function ProfilePage() {
             profileImage;
         }
 
-        if (
-          emailChanged ||
-          passwordChanged
-        ) {
+        /*
+         * Email changes require current password.
+         * Name changes do not require current password.
+         */
+        if (emailChanged) {
           body.currentPassword =
             currentPassword;
         }
 
-        const response =
-          await fetch(
-            "/api/profile",
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              credentials:
-                "include",
-              body: JSON.stringify(
-                body
-              ),
-            }
-          );
+        const response = await fetch(
+          "/api/profile",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(body),
+          }
+        );
 
         const data =
           await response.json();
@@ -438,18 +412,15 @@ export default function ProfilePage() {
           setUser(data.user);
 
           setName(
-            data.user.name ||
-              ""
+            data.user.name || ""
           );
 
           setEmail(
-            data.user.email ||
-              ""
+            data.user.email || ""
           );
 
           setPhone(
-            data.user.phone ||
-              ""
+            data.user.phone || ""
           );
 
           setProfileImage(
@@ -470,23 +441,23 @@ export default function ProfilePage() {
        */
 
       if (passwordChanged) {
-        const response =
-          await fetch(
-            "/api/profile/password",
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              credentials:
-                "include",
-              body: JSON.stringify({
-                currentPassword,
-                newPassword,
-              }),
-            }
-          );
+        setPasswordLoading(true);
+
+        const response = await fetch(
+          "/api/profile/password",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              currentPassword,
+              newPassword,
+            }),
+          }
+        );
 
         const data =
           await response.json();
@@ -517,23 +488,22 @@ export default function ProfilePage() {
           ? error.message
           : "Failed to update profile.";
 
-      if (
-        passwordChanged
-      ) {
+      if (passwordChanged) {
         setPasswordError(message);
       } else {
         setProfileError(message);
       }
     } finally {
       setProfileLoading(false);
+      setPasswordLoading(false);
     }
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Role Label
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Role Label
+   * --------------------------------------------------------------------------
+   */
 
   const roleLabel =
     user?.role === "SUPER_ADMIN"
@@ -543,10 +513,10 @@ export default function ProfilePage() {
       : "Student";
 
   /*
-  |--------------------------------------------------------------------------
-  | Loading
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Loading
+   * --------------------------------------------------------------------------
+   */
 
   if (loading) {
     return (
@@ -561,10 +531,10 @@ export default function ProfilePage() {
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | Main UI
-  |--------------------------------------------------------------------------
-  */
+   * --------------------------------------------------------------------------
+   * Main UI
+   * --------------------------------------------------------------------------
+   */
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -606,8 +576,7 @@ export default function ProfilePage() {
               href={
                 isSuperAdmin
                   ? "/superadmin/dashboard"
-                  : user?.role ===
-                    "ADMIN"
+                  : user?.role === "ADMIN"
                   ? "/admin/dashboard"
                   : "/student/dashboard"
               }
@@ -739,20 +708,49 @@ export default function ProfilePage() {
               {/* Name */}
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">
+                <label
+                  htmlFor="name"
+                  className="mb-2 block text-sm font-medium text-slate-300"
+                >
                   Full Name
                 </label>
 
-                <input
-                  type="text"
-                  value={name}
-                  disabled
-                  className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
-                />
+                {isSuperAdmin ? (
+                  <>
+                    <input
+                      id="name"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      value={name}
+                      onChange={(event) =>
+                        setName(
+                          event.target.value
+                        )
+                      }
+                      className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                    />
 
-                <p className="mt-1 text-xs text-slate-600">
-                  Name cannot be changed here.
-                </p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      SuperAdmin can change their
+                      name.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      disabled
+                      className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                    />
+
+                    <p className="mt-1 text-xs text-slate-600">
+                      Name cannot be changed here.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Email */}
@@ -765,24 +763,43 @@ export default function ProfilePage() {
                   Email / User ID
                 </label>
 
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) =>
-                    setEmail(
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
-                />
+                {isSuperAdmin ? (
+                  <>
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(event) =>
+                        setEmail(
+                          event.target.value
+                        )
+                      }
+                      className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                    />
 
-                <p className="mt-1 text-xs text-slate-600">
-                  Changing your email requires
-                  your current password.
-                </p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Changing your email requires
+                      your current password.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      disabled
+                      className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                    />
+
+                    <p className="mt-1 text-xs text-slate-600">
+                      Email / User ID cannot be
+                      changed here.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Phone */}
@@ -908,9 +925,7 @@ export default function ProfilePage() {
                     id="currentPassword"
                     type="password"
                     autoComplete="current-password"
-                    value={
-                      currentPassword
-                    }
+                    value={currentPassword}
                     onChange={(event) =>
                       setCurrentPassword(
                         event.target.value
@@ -956,9 +971,7 @@ export default function ProfilePage() {
                     id="confirmPassword"
                     type="password"
                     autoComplete="new-password"
-                    value={
-                      confirmPassword
-                    }
+                    value={confirmPassword}
                     onChange={(event) =>
                       setConfirmPassword(
                         event.target.value
@@ -977,11 +990,13 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={
-                  profileLoading
+                  profileLoading ||
+                  passwordLoading
                 }
                 className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {profileLoading
+                {profileLoading ||
+                passwordLoading
                   ? "Saving..."
                   : "Save Changes"}
               </button>

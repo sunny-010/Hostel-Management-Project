@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-/*
+/**
  * GET
  * Return the currently logged-in user's profile.
  */
@@ -58,15 +58,20 @@ export async function GET() {
   }
 }
 
-/*
+/**
  * PATCH
  *
  * Used for:
- * - Changing email
  * - Changing phone number
  * - Changing profile picture
  *
- * SuperAdmin can also change their name.
+ * SUPER_ADMIN can also:
+ * - Change name
+ * - Change email
+ *
+ * ADMIN and STUDENT:
+ * - Cannot change name
+ * - Cannot change email
  */
 export async function PATCH(request: Request) {
   try {
@@ -83,6 +88,11 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
+    const name =
+      body.name !== undefined
+        ? String(body.name).trim()
+        : undefined;
+
     const email =
       body.email !== undefined
         ? String(body.email).trim().toLowerCase()
@@ -98,12 +108,7 @@ export async function PATCH(request: Request) {
         ? body.profileImage
         : undefined;
 
-    const name =
-      body.name !== undefined
-        ? String(body.name).trim()
-        : undefined;
-
-    /*
+    /**
      * At least one supported field is required.
      */
     if (
@@ -120,8 +125,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    /*
-     * Only SuperAdmin can change their name.
+    /**
+     * Only SUPER_ADMIN can change their name.
      */
     if (
       name !== undefined &&
@@ -130,13 +135,29 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           message:
-            "You are not allowed to change your name",
+            "Only SuperAdmin can change their name",
         },
         { status: 403 }
       );
     }
 
-    /*
+    /**
+     * Only SUPER_ADMIN can change their email.
+     */
+    if (
+      email !== undefined &&
+      user.role !== "SUPER_ADMIN"
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Students and Admins are not allowed to change their email address",
+        },
+        { status: 403 }
+      );
+    }
+
+    /**
      * Validate name.
      */
     if (name !== undefined && !name) {
@@ -148,8 +169,11 @@ export async function PATCH(request: Request) {
       );
     }
 
-    /*
+    /**
      * Validate email.
+     *
+     * This applies only to SUPER_ADMIN because
+     * other roles are blocked above.
      */
     if (email !== undefined) {
       if (!email) {
@@ -174,11 +198,13 @@ export async function PATCH(request: Request) {
         );
       }
 
-      /*
+      /**
        * The new email must be different from
        * the current email.
        */
-      if (email === user.email.toLowerCase()) {
+      if (
+        email === user.email.toLowerCase()
+      ) {
         return NextResponse.json(
           {
             message:
@@ -188,7 +214,7 @@ export async function PATCH(request: Request) {
         );
       }
 
-      /*
+      /**
        * Check whether another User already
        * uses this email.
        */
@@ -211,39 +237,9 @@ export async function PATCH(request: Request) {
           { status: 409 }
         );
       }
-
-      /*
-       * Students have a separate Student.email field.
-       * Make sure it is not already used by another
-       * student.
-       */
-      if (user.role === "STUDENT") {
-        const existingStudent =
-          await prisma.student.findUnique({
-            where: {
-              email,
-            },
-            select: {
-              userId: true,
-            },
-          });
-
-        if (
-          existingStudent &&
-          existingStudent.userId !== user.id
-        ) {
-          return NextResponse.json(
-            {
-              message:
-                "This email address is already used by another student",
-            },
-            { status: 409 }
-          );
-        }
-      }
     }
 
-    /*
+    /**
      * Validate profile image.
      *
      * Profile images are stored as data URLs
@@ -290,7 +286,7 @@ export async function PATCH(request: Request) {
       }
     }
 
-    /*
+    /**
      * Build User update.
      */
     const userData: {
@@ -300,6 +296,9 @@ export async function PATCH(request: Request) {
       profileImage?: string | null;
     } = {};
 
+    /**
+     * Only SUPER_ADMIN can update name.
+     */
     if (
       name !== undefined &&
       user.role === "SUPER_ADMIN"
@@ -307,22 +306,40 @@ export async function PATCH(request: Request) {
       userData.name = name;
     }
 
-    if (email !== undefined) {
+    /**
+     * Only SUPER_ADMIN can update email.
+     */
+    if (
+      email !== undefined &&
+      user.role === "SUPER_ADMIN"
+    ) {
       userData.email = email;
     }
 
+    /**
+     * All roles can update phone.
+     */
     if (phone !== undefined) {
       userData.phone = phone || null;
     }
 
+    /**
+     * All roles can update profile picture.
+     */
     if (profileImage !== undefined) {
       userData.profileImage =
         profileImage || null;
     }
 
-    /*
-     * Update User and Student together
-     * in one transaction.
+    /**
+     * Update User.
+     *
+     * We intentionally DO NOT update Student.email
+     * because Students are not allowed to change
+     * their email from the profile page.
+     *
+     * Student.phone is kept synchronized with
+     * User.phone.
      */
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
@@ -332,38 +349,25 @@ export async function PATCH(request: Request) {
         data: userData,
       });
 
-      /*
-       * Keep Student.email and Student.phone
-       * synchronized with the User profile.
+      /**
+       * Keep Student.phone synchronized.
        */
       if (
         user.role === "STUDENT" &&
-        (email !== undefined ||
-          phone !== undefined)
+        phone !== undefined
       ) {
-        const studentData: {
-          email?: string;
-          phone?: string | null;
-        } = {};
-
-        if (email !== undefined) {
-          studentData.email = email;
-        }
-
-        if (phone !== undefined) {
-          studentData.phone = phone || null;
-        }
-
         await tx.student.update({
           where: {
             userId: user.id,
           },
-          data: studentData,
+          data: {
+            phone: phone || null,
+          },
         });
       }
     });
 
-    /*
+    /**
      * Return updated profile.
      */
     const updatedUser =
