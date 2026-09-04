@@ -129,15 +129,15 @@ export default function AdminNoticesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -186,9 +186,9 @@ export default function AdminNoticesPage() {
         )}
 
         {/* Create Notice */}
-        <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+        <div className="mb-10 rounded-2xl glass-card shadow-xl p-7">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-xl">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl btn-gradient shadow-lg/10 text-xl">
               📢
             </div>
 
@@ -224,7 +224,7 @@ export default function AdminNoticesPage() {
                   setTitle(e.target.value)
                 }
                 placeholder="Enter notice title"
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
               />
             </div>
 
@@ -245,14 +245,14 @@ export default function AdminNoticesPage() {
                   setDescription(e.target.value)
                 }
                 placeholder="Write the notice details..."
-                className="w-full resize-none rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
+                className="w-full resize-none rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
+              className="rounded-xl btn-gradient shadow-lg px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
             >
               {submitting
                 ? "Publishing..."
@@ -262,7 +262,7 @@ export default function AdminNoticesPage() {
         </div>
 
         {/* Notice List */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
               Published Notices

@@ -227,16 +227,16 @@ export default function SuperAdminSettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/95">
+      <header className="border-b border-white/10 bg-[#030712]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           {/* Logo */}
           <Link
             href="/superadmin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -275,7 +275,7 @@ export default function SuperAdminSettingsPage() {
               </div>
 
               {/* Avatar */}
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-sm font-bold">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full btn-gradient shadow-lg text-sm font-bold">
                 {profile?.profileImage ? (
                   <img
                     src={profile.profileImage}
@@ -355,7 +355,7 @@ export default function SuperAdminSettingsPage() {
 
         {/* Loading Settings */}
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+          <div className="rounded-2xl glass-card shadow-xl p-10 text-center">
             <p className="text-slate-400">
               Loading system settings...
             </p>
@@ -363,7 +363,7 @@ export default function SuperAdminSettingsPage() {
         ) : (
           <>
             {/* General Settings */}
-            <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <section className="mb-6 rounded-2xl glass-card shadow-xl p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">
                   General Settings
@@ -387,7 +387,7 @@ export default function SuperAdminSettingsPage() {
                     onChange={(e) =>
                       setSystemName(e.target.value)
                     }
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                     placeholder="HostelHub"
                   />
                 </div>
@@ -405,7 +405,7 @@ export default function SuperAdminSettingsPage() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                     placeholder="Hostel Management System"
                   />
                 </div>
@@ -424,7 +424,7 @@ export default function SuperAdminSettingsPage() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                     placeholder="admin@example.com"
                   />
                 </div>
@@ -443,7 +443,7 @@ export default function SuperAdminSettingsPage() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-blue-500"
                     placeholder="+91 XXXXX XXXXX"
                   />
                 </div>
@@ -451,7 +451,7 @@ export default function SuperAdminSettingsPage() {
             </section>
 
             {/* System Controls */}
-            <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <section className="mb-6 rounded-2xl glass-card shadow-xl p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold">
                   System Controls
@@ -464,7 +464,7 @@ export default function SuperAdminSettingsPage() {
 
               <div className="space-y-5">
                 {/* Maintenance Mode */}
-                <div className="flex items-center justify-between gap-5 rounded-xl border border-white/10 bg-slate-900/50 p-5">
+                <div className="flex items-center justify-between gap-5 rounded-xl border border-white/10 input-glow bg-white/5/50 p-5">
                   <div>
                     <h4 className="font-medium">
                       Maintenance Mode
@@ -486,7 +486,7 @@ export default function SuperAdminSettingsPage() {
                     aria-pressed={maintenanceMode}
                     className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                       maintenanceMode
-                        ? "bg-blue-600"
+                        ? "btn-gradient shadow-lg"
                         : "bg-slate-700"
                     }`}
                   >
@@ -501,7 +501,7 @@ export default function SuperAdminSettingsPage() {
                 </div>
 
                 {/* Admin Creation */}
-                <div className="flex items-center justify-between gap-5 rounded-xl border border-white/10 bg-slate-900/50 p-5">
+                <div className="flex items-center justify-between gap-5 rounded-xl border border-white/10 input-glow bg-white/5/50 p-5">
                   <div>
                     <h4 className="font-medium">
                       Allow Admin Creation
@@ -523,7 +523,7 @@ export default function SuperAdminSettingsPage() {
                     aria-pressed={allowAdminCreation}
                     className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                       allowAdminCreation
-                        ? "bg-blue-600"
+                        ? "btn-gradient shadow-lg"
                         : "bg-slate-700"
                     }`}
                   >
@@ -545,7 +545,7 @@ export default function SuperAdminSettingsPage() {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl btn-gradient shadow-lg px-6 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving
                   ? "Saving..."

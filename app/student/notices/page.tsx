@@ -41,15 +41,15 @@ export default function StudentNoticesPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/student/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -99,12 +99,12 @@ export default function StudentNoticesPage() {
 
         {/* Loading */}
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center text-slate-400">
+          <div className="rounded-2xl glass-card shadow-xl px-6 py-14 text-center text-slate-400">
             Loading notices...
           </div>
         ) : notices.length === 0 ? (
           /* Empty */
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-16 text-center">
+          <div className="rounded-2xl glass-card shadow-xl px-6 py-16 text-center">
             <div className="mb-5 text-6xl">
               📢
             </div>
@@ -123,10 +123,10 @@ export default function StudentNoticesPage() {
             {notices.map((notice) => (
               <article
                 key={notice.id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-blue-500/30 hover:bg-white/[0.05]"
+                className="rounded-2xl glass-card shadow-xl p-6 transition hover:border-blue-500/30 hover:bg-white/[0.05]"
               >
                 <div className="flex gap-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-2xl">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl btn-gradient shadow-lg/10 text-2xl">
                     📢
                   </div>
 

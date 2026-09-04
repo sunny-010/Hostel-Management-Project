@@ -176,15 +176,15 @@ export default function AdminLeavePage() {
     ).length;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -209,7 +209,7 @@ export default function AdminLeavePage() {
       </header>
 
       {/* Main */}
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         {/* Heading */}
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium text-blue-400">
@@ -267,7 +267,7 @@ export default function AdminLeavePage() {
         </div>
 
         {/* Applications */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
               All Leave Applications
@@ -307,7 +307,7 @@ export default function AdminLeavePage() {
                 return (
                   <div
                     key={leave.id}
-                    className="p-6 transition hover:bg-white/[0.02]"
+                    className="p-6 transition hover:bg-white/5"
                   >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                       {/* Details */}

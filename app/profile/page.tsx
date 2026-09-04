@@ -520,7 +520,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white">
+      <main className="min-h-screen bg-[#030712] text-white">
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-slate-400">
             Loading profile...
@@ -537,10 +537,10 @@ export default function ProfilePage() {
    */
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Navbar */}
 
-      <header className="border-b border-white/10 bg-slate-950/95">
+      <header className="border-b border-white/10 bg-[#030712]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
 
@@ -554,7 +554,7 @@ export default function ProfilePage() {
             }
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -633,7 +633,7 @@ export default function ProfilePage() {
 
         {/* Profile Card */}
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl">
+        <div className="rounded-2xl glass-card shadow-xl p-6 shadow-2xl">
           <div className="mb-8 flex flex-col items-center gap-5 sm:flex-row">
             {/* Profile Image */}
 
@@ -652,7 +652,7 @@ export default function ProfilePage() {
 
               <label
                 htmlFor="profileImage"
-                className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-blue-600 text-sm shadow-lg transition hover:bg-blue-500"
+                className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/10 btn-gradient shadow-lg text-sm shadow-lg transition hover:bg-blue-500"
                 title="Change profile picture"
               >
                 📷
@@ -728,7 +728,7 @@ export default function ProfilePage() {
                           event.target.value
                         )
                       }
-                      className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                      className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                     />
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -743,7 +743,7 @@ export default function ProfilePage() {
                       type="text"
                       value={name}
                       disabled
-                      className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                      className="w-full rounded-xl border border-white/10 input-glow bg-white/5/50 px-4 py-3 text-sm text-slate-500 outline-none"
                     />
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -776,7 +776,7 @@ export default function ProfilePage() {
                           event.target.value
                         )
                       }
-                      className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                      className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                     />
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -791,7 +791,7 @@ export default function ProfilePage() {
                       type="email"
                       value={email}
                       disabled
-                      className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                      className="w-full rounded-xl border border-white/10 input-glow bg-white/5/50 px-4 py-3 text-sm text-slate-500 outline-none"
                     />
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -823,7 +823,7 @@ export default function ProfilePage() {
                     )
                   }
                   placeholder="Enter phone number"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                 />
               </div>
 
@@ -841,7 +841,7 @@ export default function ProfilePage() {
                       student.studentId
                     }
                     disabled
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5/50 px-4 py-3 text-sm text-slate-500 outline-none"
                   />
                 </div>
               )}
@@ -863,7 +863,7 @@ export default function ProfilePage() {
                       "Not provided"
                     }
                     disabled
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5/50 px-4 py-3 text-sm text-slate-500 outline-none"
                   />
                 </div>
 
@@ -882,7 +882,7 @@ export default function ProfilePage() {
                         : "Not provided"
                     }
                     disabled
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-500 outline-none"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5/50 px-4 py-3 text-sm text-slate-500 outline-none"
                   />
                 </div>
               </div>
@@ -932,7 +932,7 @@ export default function ProfilePage() {
                       )
                     }
                     placeholder="Current password"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                   />
                 </div>
 
@@ -955,7 +955,7 @@ export default function ProfilePage() {
                       )
                     }
                     placeholder="New password"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                   />
                 </div>
 
@@ -978,7 +978,7 @@ export default function ProfilePage() {
                       )
                     }
                     placeholder="Confirm password"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
+                    className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -993,7 +993,7 @@ export default function ProfilePage() {
                   profileLoading ||
                   passwordLoading
                 }
-                className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl btn-gradient shadow-lg px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {profileLoading ||
                 passwordLoading

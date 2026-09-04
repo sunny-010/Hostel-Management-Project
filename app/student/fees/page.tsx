@@ -79,15 +79,15 @@ export default function StudentFeesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/student/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -136,7 +136,7 @@ export default function StudentFeesPage() {
 
         {/* Summary */}
         <div className="mb-8 grid gap-5 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="rounded-2xl glass-card shadow-xl p-6">
             <p className="text-sm text-slate-400">
               Total Fees
             </p>
@@ -168,7 +168,7 @@ export default function StudentFeesPage() {
         </div>
 
         {/* Fee Records */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
               Fee Records
@@ -200,7 +200,7 @@ export default function StudentFeesPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="border-b border-white/10 bg-white/[0.02]">
+                <thead className="border-b border-white/10 bg-white/5">
                   <tr>
                     <th className="px-6 py-4 text-sm">
                       Fee ID

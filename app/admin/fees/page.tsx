@@ -795,11 +795,11 @@ export default function FeesPage() {
   -------------------------------------------------- */
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
 
       {/* HEADER */}
 
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
 
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
 
@@ -808,7 +808,7 @@ export default function FeesPage() {
             className="flex items-center gap-3"
           >
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -837,7 +837,7 @@ export default function FeesPage() {
 
       {/* MAIN */}
 
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
 
         {/* HEADING */}
 
@@ -870,7 +870,7 @@ export default function FeesPage() {
 
         <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="rounded-2xl glass-card shadow-xl p-6">
 
             <p className="text-sm text-slate-400">
               Total Fees
@@ -922,7 +922,7 @@ export default function FeesPage() {
 
         {/* CREATE FEE */}
 
-        <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="mb-10 rounded-2xl glass-card shadow-xl p-6">
 
           <h3 className="mb-6 text-xl font-bold">
             Create New Fee
@@ -958,7 +958,7 @@ export default function FeesPage() {
                       e.target.value
                     )
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 >
 
                   <option value="">
@@ -1007,7 +1007,7 @@ export default function FeesPage() {
                     )
                   }
                   placeholder="5000"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
 
               </div>
@@ -1029,7 +1029,7 @@ export default function FeesPage() {
                       e.target.value
                     )
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
 
               </div>
@@ -1041,7 +1041,7 @@ export default function FeesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
                 >
                   {saving
                     ? "Creating..."
@@ -1058,7 +1058,7 @@ export default function FeesPage() {
 
         {/* SEARCH AND FILTERS */}
 
-        <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="mb-8 rounded-2xl glass-card shadow-xl p-6">
 
           <div className="mb-5">
 
@@ -1096,7 +1096,7 @@ export default function FeesPage() {
                     e.target.value
                   )
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
 
                 <option value="">
@@ -1142,7 +1142,7 @@ export default function FeesPage() {
                 disabled={
                   !selectedHostelId
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
 
                 <option value="">
@@ -1190,7 +1190,7 @@ export default function FeesPage() {
                 disabled={
                   !selectedBlockId
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
 
                 <option value="">
@@ -1240,7 +1240,7 @@ export default function FeesPage() {
                       | FeeStatus
                   )
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               >
 
                 <option value="">
@@ -1285,7 +1285,7 @@ export default function FeesPage() {
                   )
                 }
                 placeholder="Search student, ID, email, department, hostel, block, room..."
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 pr-12 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 pr-12 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-500"
               />
 
               {search && (
@@ -1306,7 +1306,7 @@ export default function FeesPage() {
             <button
               type="submit"
               disabled={searching}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl btn-gradient shadow-lg px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {searching
                 ? "Searching..."
@@ -1430,7 +1430,7 @@ export default function FeesPage() {
 
         {/* FEE TABLE */}
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
 
           <div className="border-b border-white/10 px-6 py-5">
 
@@ -1483,7 +1483,7 @@ export default function FeesPage() {
 
               <table className="w-full text-left">
 
-                <thead className="border-b border-white/10 bg-white/[0.02]">
+                <thead className="border-b border-white/10 bg-white/5">
 
                   <tr>
 
@@ -1613,7 +1613,7 @@ export default function FeesPage() {
                                       .value
                                   )
                                 }
-                                className="w-32 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
+                                className="w-32 rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 outline-none focus:border-blue-500"
                               />
 
                             </td>
@@ -1636,7 +1636,7 @@ export default function FeesPage() {
                                       .value
                                   )
                                 }
-                                className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white outline-none focus:border-blue-500"
+                                className="rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-500"
                               />
 
                             </td>
@@ -1670,7 +1670,7 @@ export default function FeesPage() {
                                       .value as FeeStatus
                                   )
                                 }
-                                className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 outline-none focus:border-blue-500"
+                                className="rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 outline-none focus:border-blue-500"
                               >
 
                                 <option value="PENDING">

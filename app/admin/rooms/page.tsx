@@ -775,16 +775,16 @@ export default function RoomsPage() {
   // --------------------------------------------------
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
 
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -810,7 +810,7 @@ export default function RoomsPage() {
 
       {/* Main */}
 
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         {/* Heading */}
 
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -843,7 +843,7 @@ export default function RoomsPage() {
                 setEditingRoom(null);
                 setMessage("");
               }}
-              className="rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500"
+              className="rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold transition hover:bg-blue-500"
             >
               {showHostelForm
                 ? "Cancel"
@@ -901,7 +901,7 @@ export default function RoomsPage() {
         ================================================== */}
 
         {showHostelForm && (
-          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="mb-8 rounded-2xl glass-card shadow-xl p-6">
             <h3 className="mb-6 text-xl font-bold">
               Add New Hostel
             </h3>
@@ -925,7 +925,7 @@ export default function RoomsPage() {
                     })
                   }
                   placeholder="Hostel A"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -944,7 +944,7 @@ export default function RoomsPage() {
                     })
                   }
                   placeholder="Block A"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -952,7 +952,7 @@ export default function RoomsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
                 >
                   {saving
                     ? "Creating..."
@@ -997,7 +997,7 @@ export default function RoomsPage() {
                         e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-purple-500"
                 >
                   <option value="">
                     Select hostel
@@ -1029,7 +1029,7 @@ export default function RoomsPage() {
                     })
                   }
                   placeholder="Block B"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-purple-500"
                 />
               </div>
 
@@ -1053,7 +1053,7 @@ export default function RoomsPage() {
         ================================================== */}
 
         {showRoomForm && (
-          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="mb-8 rounded-2xl glass-card shadow-xl p-6">
             <h3 className="mb-6 text-xl font-bold">
               Add New Room
             </h3>
@@ -1080,7 +1080,7 @@ export default function RoomsPage() {
                       blockId: "",
                     });
                   }}
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 >
                   <option value="">
                     Select hostel
@@ -1117,7 +1117,7 @@ export default function RoomsPage() {
                         e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">
                     {roomForm.hostelId
@@ -1166,7 +1166,7 @@ export default function RoomsPage() {
                     })
                   }
                   placeholder="101"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1193,7 +1193,7 @@ export default function RoomsPage() {
                     })
                   }
                   placeholder="4"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1203,7 +1203,7 @@ export default function RoomsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
                 >
                   {saving
                     ? "Creating..."
@@ -1260,7 +1260,7 @@ export default function RoomsPage() {
                       name: e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1268,7 +1268,7 @@ export default function RoomsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
                 >
                   {saving
                     ? "Saving..."
@@ -1328,7 +1328,7 @@ export default function RoomsPage() {
                         e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1354,7 +1354,7 @@ export default function RoomsPage() {
                         e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 />
 
                 <p className="mt-2 text-xs text-slate-500">
@@ -1370,7 +1370,7 @@ export default function RoomsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
                 >
                   {saving
                     ? "Saving..."
@@ -1390,7 +1390,7 @@ export default function RoomsPage() {
             Loading hostels...
           </div>
         ) : hostels.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-14 text-center">
+          <div className="rounded-2xl glass-card shadow-xl px-6 py-14 text-center">
             <div className="mb-4 text-5xl">
               🏢
             </div>
@@ -1426,13 +1426,13 @@ export default function RoomsPage() {
               return (
                 <div
                   key={hostel.id}
-                  className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+                  className="overflow-hidden rounded-2xl glass-card shadow-xl"
                 >
                   {/* Hostel Header */}
 
                   <div className="flex flex-col justify-between gap-4 border-b border-white/10 p-6 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-xl">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl btn-gradient shadow-lg/10 text-xl">
                         🏢
                       </div>
 
@@ -1618,7 +1618,7 @@ export default function RoomsPage() {
                           {block.rooms
                             .length ===
                           0 ? (
-                            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 text-sm text-slate-500">
+                            <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-sm text-slate-500">
                               No rooms have been
                               added to this
                               block yet.
@@ -1626,7 +1626,7 @@ export default function RoomsPage() {
                           ) : (
                             <div className="overflow-x-auto rounded-xl border border-white/10">
                               <table className="w-full text-left">
-                                <thead className="border-b border-white/10 bg-white/[0.02]">
+                                <thead className="border-b border-white/10 bg-white/5">
                                   <tr>
                                     <th className="px-5 py-4 text-sm">
                                       Room
@@ -1657,7 +1657,7 @@ export default function RoomsPage() {
                                         key={
                                           room.id
                                         }
-                                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                                        className="border-b border-white/5 last:border-0 hover:bg-white/5"
                                       >
                                         <td className="px-5 py-4 font-medium">
                                           Room{" "}

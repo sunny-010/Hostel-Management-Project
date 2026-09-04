@@ -1,8 +1,8 @@
 export default function MaintenancePage() {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#030712] px-6 text-white">
         <div className="w-full max-w-lg text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600/10 text-4xl">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl btn-gradient shadow-lg/10 text-4xl">
             🛠️
           </div>
   
@@ -20,7 +20,7 @@ export default function MaintenancePage() {
             Please try again later.
           </p>
   
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="mt-8 rounded-2xl glass-card shadow-xl p-5">
             <div className="flex items-center justify-center gap-3 text-sm text-slate-300">
               <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
               Maintenance Mode Active

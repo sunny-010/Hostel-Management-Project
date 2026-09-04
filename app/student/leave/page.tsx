@@ -113,15 +113,15 @@ export default function StudentLeavePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/student/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -169,7 +169,7 @@ export default function StudentLeavePage() {
         )}
 
         {/* Application Form */}
-        <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="mb-10 rounded-2xl glass-card shadow-xl p-6">
           <h3 className="mb-6 text-xl font-bold">
             Apply for Leave
           </h3>
@@ -191,7 +191,7 @@ export default function StudentLeavePage() {
                   onChange={(e) =>
                     setFromDate(e.target.value)
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -208,7 +208,7 @@ export default function StudentLeavePage() {
                   onChange={(e) =>
                     setToDate(e.target.value)
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -226,14 +226,14 @@ export default function StudentLeavePage() {
                 }
                 placeholder="Enter the reason for your leave..."
                 rows={5}
-                className="w-full resize-none rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
+                className="w-full resize-none rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-blue-500"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
+              className="rounded-xl btn-gradient shadow-lg px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:opacity-50"
             >
               {submitting
                 ? "Submitting..."
@@ -243,7 +243,7 @@ export default function StudentLeavePage() {
         </div>
 
         {/* History */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
               Application History

@@ -340,16 +340,16 @@ export default function AllocationsPage() {
   // --------------------------------------------------
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
 
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -375,7 +375,7 @@ export default function AllocationsPage() {
 
       {/* Main */}
 
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         {/* Heading */}
 
         <div className="mb-8">
@@ -403,7 +403,7 @@ export default function AllocationsPage() {
 
         {/* Allocate Room */}
 
-        <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="mb-8 rounded-2xl glass-card shadow-xl p-6">
           <h3 className="mb-6 text-xl font-bold">
             Allocate Room
           </h3>
@@ -427,7 +427,7 @@ export default function AllocationsPage() {
                     e.target.value
                   )
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
               >
                 <option value="">
                   Select student
@@ -462,7 +462,7 @@ export default function AllocationsPage() {
                     e.target.value
                   )
                 }
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
               >
                 <option value="">
                   Select room
@@ -498,7 +498,7 @@ export default function AllocationsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving
                   ? "Allocating..."
@@ -570,7 +570,7 @@ export default function AllocationsPage() {
                       e.target.value
                     )
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 outline-none focus:border-blue-500"
                 >
                   <option value="">
                     Select new room
@@ -605,7 +605,7 @@ export default function AllocationsPage() {
                 <button
                   type="submit"
                   disabled={modifying}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl btn-gradient shadow-lg px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {modifying
                     ? "Changing..."
@@ -618,7 +618,7 @@ export default function AllocationsPage() {
 
         {/* Allocation List */}
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 p-6">
             <h3 className="text-xl font-bold">
               Current Room Allocations
@@ -652,7 +652,7 @@ export default function AllocationsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="border-b border-white/10 bg-white/[0.02]">
+                <thead className="border-b border-white/10 bg-white/5">
                   <tr>
                     <th className="px-6 py-4 text-sm">
                       Student
@@ -689,7 +689,7 @@ export default function AllocationsPage() {
                     (allocation) => (
                       <tr
                         key={allocation.id}
-                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                        className="border-b border-white/5 last:border-0 hover:bg-white/5"
                       >
                         <td className="px-6 py-4">
                           <div>

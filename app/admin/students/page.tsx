@@ -294,16 +294,16 @@ export default function StudentsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
-              🏠
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient text-xl shadow-lg">
+              🎓
             </div>
 
             <div>
@@ -327,7 +327,7 @@ export default function StudentsPage() {
       </header>
 
       {/* Content */}
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         {/* Page Header */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -351,7 +351,7 @@ export default function StudentsPage() {
                 ? cancelForm
                 : startAddStudent
             }
-            className="rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500"
+            className="rounded-xl btn-gradient px-5 py-3 font-semibold transition shadow-lg"
           >
             {showForm
               ? "Cancel"
@@ -368,7 +368,7 @@ export default function StudentsPage() {
 
         {/* Add / Edit Form */}
         {showForm && (
-          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="mb-8 rounded-2xl glass-card p-6 shadow-xl">
             <h3 className="mb-6 text-xl font-bold">
               {editingId !== null
                 ? "Edit Student"
@@ -395,7 +395,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="2026CSE001"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -415,7 +415,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="Rahul Sharma"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -436,7 +436,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="student@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -455,7 +455,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="+91 9876543210"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -474,7 +474,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="Computer Science"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -496,7 +496,7 @@ export default function StudentsPage() {
                     )
                   }
                   placeholder="2"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -525,7 +525,7 @@ export default function StudentsPage() {
                       ? "Leave blank to keep current password"
                       : "Minimum 6 characters"
                   }
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl input-glow bg-white/5 px-4 py-3 outline-none"
                 />
               </div>
 
@@ -534,7 +534,7 @@ export default function StudentsPage() {
                 <button
                   disabled={saving}
                   type="submit"
-                  className="flex-1 rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 rounded-xl btn-gradient px-5 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 shadow-lg"
                 >
                   {saving
                     ? editingId !== null
@@ -560,7 +560,7 @@ export default function StudentsPage() {
         )}
 
         {/* Student Table */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
               Student List
@@ -598,7 +598,7 @@ export default function StudentsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="border-b border-white/10 bg-white/[0.02]">
+                <thead className="border-b border-white/10 bg-white/5">
                   <tr>
                     <th className="px-6 py-4 text-sm font-semibold">
                       Student
@@ -631,7 +631,7 @@ export default function StudentsPage() {
                     (student) => (
                       <tr
                         key={student.id}
-                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                        className="border-b border-white/5 last:border-0 hover:bg-white-5 transition-colors"
                       >
                         <td className="px-6 py-4">
                           <p className="font-medium">

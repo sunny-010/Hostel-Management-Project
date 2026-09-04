@@ -188,15 +188,15 @@ export default function ComplaintsPage() {
   // --------------------------------
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -221,7 +221,7 @@ export default function ComplaintsPage() {
       </header>
 
       {/* Main */}
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         {/* Heading */}
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium text-blue-400">
@@ -247,7 +247,7 @@ export default function ComplaintsPage() {
         {/* Statistics */}
         <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Total */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="rounded-2xl glass-card shadow-xl p-6">
             <p className="text-sm text-slate-400">
               Total Complaints
             </p>
@@ -292,7 +292,7 @@ export default function ComplaintsPage() {
         </div>
 
         {/* Complaints */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl glass-card shadow-xl">
           {/* Table Header */}
           <div className="border-b border-white/10 px-6 py-5">
             <h3 className="font-bold">
@@ -338,7 +338,7 @@ export default function ComplaintsPage() {
                   return (
                     <div
                       key={complaint.id}
-                      className="p-6 transition hover:bg-white/[0.02]"
+                      className="p-6 transition hover:bg-white/5"
                     >
                       <div className="flex flex-col justify-between gap-6 lg:flex-row">
                         {/* Complaint Information */}
@@ -420,7 +420,7 @@ export default function ComplaintsPage() {
                           {/* Student Accommodation */}
                           {/* -------------------------------- */}
 
-                          <div className="mt-5 rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                          <div className="mt-5 rounded-xl border border-white/10 input-glow bg-white/5/50 p-4">
                             <div className="mb-3 flex items-center gap-2">
                               <span className="text-lg">
                                 🏠
@@ -516,7 +516,7 @@ export default function ComplaintsPage() {
                                   .value as ComplaintStatus
                               )
                             }
-                            className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
+                            className="rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
                           >
                             <option value="PENDING">
                               Pending

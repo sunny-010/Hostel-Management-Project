@@ -504,16 +504,16 @@ export default function SuperAdminAdminsPage() {
    */
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
 
-      <header className="border-b border-white/10 bg-slate-950/95">
+      <header className="border-b border-white/10 bg-[#030712]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/superadmin/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -555,7 +555,7 @@ export default function SuperAdminAdminsPage() {
 
       {/* Content */}
 
-      <section className="mx-auto max-w-7xl px-6 py-10">
+      <section className="mx-auto max-w-7xl px-6 py-10 animate-fade-in-up">
         <div className="mb-10">
           <p className="mb-2 text-sm font-medium text-blue-400">
             SUPERADMIN MANAGEMENT
@@ -587,7 +587,7 @@ export default function SuperAdminAdminsPage() {
 
         {/* Create Administrator */}
 
-        <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="mb-10 rounded-2xl glass-card shadow-xl p-6">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="text-xl font-bold">
@@ -638,7 +638,7 @@ export default function SuperAdminAdminsPage() {
             )}
 
           {settingsLoading ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 text-sm text-slate-400">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-sm text-slate-400">
               Loading administrator creation
               settings...
             </div>
@@ -671,7 +671,7 @@ export default function SuperAdminAdminsPage() {
                     )
                   }
                   placeholder="Administrator name"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
                 />
               </div>
 
@@ -699,7 +699,7 @@ export default function SuperAdminAdminsPage() {
                     )
                   }
                   placeholder="admin@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
                 />
               </div>
 
@@ -727,7 +727,7 @@ export default function SuperAdminAdminsPage() {
                   }
                   placeholder="Phone number"
                   maxLength={30}
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
                 />
               </div>
 
@@ -756,7 +756,7 @@ export default function SuperAdminAdminsPage() {
                     )
                   }
                   placeholder="Minimum 8 characters"
-                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-xl border border-white/10 input-glow bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
                 />
               </div>
 
@@ -769,7 +769,7 @@ export default function SuperAdminAdminsPage() {
                     creating ||
                     !allowAdminCreation
                   }
-                  className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl btn-gradient shadow-lg px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creating
                     ? "Creating..."
@@ -782,7 +782,7 @@ export default function SuperAdminAdminsPage() {
 
         {/* Administrators */}
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="rounded-2xl glass-card shadow-xl p-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-xl font-bold">
@@ -810,11 +810,11 @@ export default function SuperAdminAdminsPage() {
           </div>
 
           {loading ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-10 text-center text-sm text-slate-400">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-10 text-center text-sm text-slate-400">
               Loading administrators...
             </div>
           ) : admins.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-10 text-center">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-10 text-center">
               <div className="text-4xl">
                 👨‍💼
               </div>
@@ -831,7 +831,7 @@ export default function SuperAdminAdminsPage() {
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full text-left">
-                <thead className="border-b border-white/10 bg-white/[0.02]">
+                <thead className="border-b border-white/10 bg-white/5">
                   <tr>
                     <th className="px-5 py-4 text-sm">
                       Name
@@ -867,7 +867,7 @@ export default function SuperAdminAdminsPage() {
                   {admins.map((admin) => (
                     <tr
                       key={admin.id}
-                      className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                      className="border-b border-white/5 last:border-0 hover:bg-white/5"
                     >
                       <td className="px-5 py-4 font-medium">
                         {admin.name}
@@ -935,7 +935,7 @@ export default function SuperAdminAdminsPage() {
                               disabled={
                                 savingEdit
                               }
-                              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="w-full rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
 
                             {/* Edit Email */}
@@ -958,7 +958,7 @@ export default function SuperAdminAdminsPage() {
                               disabled={
                                 savingEdit
                               }
-                              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="w-full rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
 
                             {/* Edit Phone */}
@@ -981,7 +981,7 @@ export default function SuperAdminAdminsPage() {
                               disabled={
                                 savingEdit
                               }
-                              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="w-full rounded-lg border border-white/10 input-glow bg-white/5 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
 
                             <div className="flex justify-end gap-2">
@@ -1003,7 +1003,7 @@ export default function SuperAdminAdminsPage() {
                                 disabled={
                                   savingEdit
                                 }
-                                className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-lg btn-gradient shadow-lg px-3 py-2 text-sm font-medium transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {savingEdit
                                   ? "Saving..."

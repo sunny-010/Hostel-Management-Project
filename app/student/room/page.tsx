@@ -75,15 +75,15 @@ export default function StudentRoomPage() {
     : 0;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link
             href="/student/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl btn-gradient shadow-lg text-xl">
               🏠
             </div>
 
@@ -126,7 +126,7 @@ export default function StudentRoomPage() {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center text-slate-400">
+          <div className="rounded-2xl glass-card shadow-xl p-12 text-center text-slate-400">
             Loading room information...
           </div>
         ) : !data ? (
@@ -145,8 +145,8 @@ export default function StudentRoomPage() {
           <>
             {/* Hostel & Room */}
             <div className="mb-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600/10 text-3xl">
+              <div className="rounded-2xl glass-card shadow-xl p-7">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl btn-gradient shadow-lg/10 text-3xl">
                   🏢
                 </div>
 
@@ -163,8 +163,8 @@ export default function StudentRoomPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600/10 text-3xl">
+              <div className="rounded-2xl glass-card shadow-xl p-7">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl btn-gradient shadow-lg/10 text-3xl">
                   🚪
                 </div>
 
@@ -184,7 +184,7 @@ export default function StudentRoomPage() {
 
             {/* Room Statistics */}
             <div className="mb-6 grid gap-5 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+              <div className="rounded-2xl glass-card shadow-xl p-6">
                 <p className="text-sm text-slate-400">
                   Capacity
                 </p>
@@ -198,7 +198,7 @@ export default function StudentRoomPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+              <div className="rounded-2xl glass-card shadow-xl p-6">
                 <p className="text-sm text-slate-400">
                   Occupied
                 </p>
@@ -228,7 +228,7 @@ export default function StudentRoomPage() {
             </div>
 
             {/* Allocation Details */}
-            <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <div className="mb-6 rounded-2xl glass-card shadow-xl p-7">
               <h3 className="mb-6 text-xl font-bold">
                 Allocation Details
               </h3>
@@ -279,7 +279,7 @@ export default function StudentRoomPage() {
             </div>
 
             {/* Roommates */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <div className="rounded-2xl glass-card shadow-xl p-7">
               <div className="mb-6">
                 <h3 className="text-xl font-bold">
                   Roommates
@@ -291,7 +291,7 @@ export default function StudentRoomPage() {
               </div>
 
               {data.roommates.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
                   <div className="mb-3 text-4xl">👤</div>
 
                   <p className="font-medium">
@@ -308,11 +308,11 @@ export default function StudentRoomPage() {
                   {data.roommates.map((roommate) => (
                     <div
                       key={roommate.id}
-                      className="rounded-xl border border-white/10 bg-white/[0.02] p-5"
+                      className="rounded-xl border border-white/10 bg-white/5 p-5"
                     >
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex items-start gap-4">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-xl">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full btn-gradient shadow-lg/10 text-xl">
                             👤
                           </div>
 
