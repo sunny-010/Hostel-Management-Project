@@ -658,6 +658,17 @@ export default function ProfilePage() {
                 📷
               </label>
 
+              {profileImage && (
+                <button
+                  type="button"
+                  onClick={() => setProfileImage(null)}
+                  className="absolute bottom-0 left-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-red-500 shadow-lg text-sm transition hover:bg-red-600"
+                  title="Remove profile picture"
+                >
+                  🗑️
+                </button>
+              )}
+
               <input
                 id="profileImage"
                 type="file"
