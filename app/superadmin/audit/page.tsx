@@ -297,55 +297,31 @@ export default function SuperAdminAuditPage() {
           </Link>
 
           {/* Right Side */}
-          <div className="flex items-center gap-4">
-            {/* SuperAdmin Profile */}
+          <div className="flex items-center gap-3">
             <Link
-              href="/profile"
-              className="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/5"
-              title="My Profile"
+              href="/superadmin/dashboard"
+              className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
-              {/* Name + Role */}
-              <div className="hidden text-right sm:block">
-                <p className="text-sm font-semibold">
-                  {profileLoading
-                    ? "Loading..."
-                    : superAdminName}
-                </p>
-
-                <p className="text-xs text-blue-400">
-                  System Administrator
-                </p>
-              </div>
-
-              {/* Avatar */}
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt={superAdminName}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full btn-gradient shadow-lg text-sm font-bold">
-                  {profileLoading
-                    ? "..."
-                    : superAdminName
-                        .trim()
-                        .charAt(0)
-                        .toUpperCase()}
-                </div>
-              )}
+              ← Dashboard
             </Link>
 
-            {/* Logout */}
             <button
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
               title={loggingOut ? "Logging out..." : "Logout"}
-              aria-label={loggingOut ? "Logging out..." : "Logout"}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-xl text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Logout"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loggingOut ? "⏳" : "⏻"}
+              {loggingOut ? (
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m0 14v1m8-8h1M4 12H3m15.364-6.364l.707-.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              )}
             </button>
           </div>
         </div>

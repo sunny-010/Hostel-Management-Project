@@ -118,7 +118,7 @@ export default function StudentComplaintsPage() {
       {/* Header */}
       <header className="border-b border-white/10 bg-[#030712]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <a href="/student/dashboard">
+          <a href="/student/dashboard" className="flex items-center gap-3">
             <div>
               <h1 className="text-xl font-bold">
                 HostelHub
@@ -130,12 +130,27 @@ export default function StudentComplaintsPage() {
             </div>
           </a>
 
-          <a
+          <div className="flex items-center gap-3">
+            <a
             href="/student/dashboard"
             className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
           >
             ← Dashboard
           </a>
+
+            <form action="/api/logout" method="POST">
+              <button
+                type="submit"
+                title="Logout"
+                aria-label="Logout"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
